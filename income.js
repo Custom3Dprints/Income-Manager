@@ -19,7 +19,6 @@ const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
 document.getElementById('submitBtn').addEventListener('click', submitData);
-document.getElementById('historyBtn').addEventListener('click', showHistory);
 document.getElementById('deleteBtn').addEventListener('click', deleteData);
 
 async function submitData() {
