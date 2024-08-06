@@ -2,14 +2,14 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/9.12.1/firebas
 import { getFirestore, collection, getDocs, addDoc, query, where, deleteDoc } from "https://www.gstatic.com/firebasejs/9.12.1/firebase-firestore.js";
 
 const firebaseConfig = {
-  apiKey: "AIzaSyDlGWR_yUnBhiPgxl7Tf3af8lUp2S4cOow",
-  authDomain: "finance-925e7.firebaseapp.com",
-  databaseURL: "https://finance-925e7-default-rtdb.firebaseio.com",
-  projectId: "finance-925e7",
-  storageBucket: "finance-925e7.appspot.com",
-  messagingSenderId: "1045461884935",
-  appId: "1:1045461884935:web:280cdbfa1eb28a272c0aa2",
-  measurementId: "G-NQNYE0ZM1C"
+    apiKey: "AIzaSyDlGWR_yUnBhiPgxl7Tf3af8lUp2S4cOow",
+    authDomain: "finance-925e7.firebaseapp.com",
+    databaseURL: "https://finance-925e7-default-rtdb.firebaseio.com",
+    projectId: "finance-925e7",
+    storageBucket: "finance-925e7.appspot.com",
+    messagingSenderId: "1045461884935",
+    appId: "1:1045461884935:web:280cdbfa1eb28a272c0aa2",
+    measurementId: "G-NQNYE0ZM1C"
 };
 
 // Initialize Firebase
@@ -111,7 +111,7 @@ async function showEntries() {
         entries.forEach(entry => {
             const entryDiv = document.createElement('div');
             entryDiv.innerHTML = `
-                <p>Job: ${entry.job}</p>
+                <br><p>Job: ${entry.job}</p>
                 <p>Amount: $${entry.amount.toFixed(2)}</p>
                 <p>Date: ${entry.date}</p>
             `;
