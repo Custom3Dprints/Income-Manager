@@ -1,0 +1,50 @@
+.container {
+    display: flex;
+    justify-content: space-between;
+    padding: 20px;
+    flex-wrap: wrap;
+}
+
+.column {
+    width: 30%;
+    padding: 10px;
+
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    border-radius: 8px;
+    background-color: #f6f6f6;
+}
+
+.form-section {
+    display: flex;
+    flex-direction: column;
+}
+
+.form-section label, .form-section input, .form-section select, .form-section button {
+    margin-bottom: 10px;
+}
+
+.output-section {
+
+    padding: 10px;
+    overflow-y: auto;
+    height: 90vh; /* Adjust as needed */
+}
+
+h2 {
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+
+@media (max-width: 1000px) {
+    .column {
+        min-width: 100%;
+        margin-bottom: 20px;
+    }
+
+    .output-section{
+        height: max-content;
+    }
+}
+
+

@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Income Tracker</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <div class="column form-section">
+            <h2>Input</h2>
+            <label for="job">Job:</label>
+            <select id="job">
+                <option value="CodeNinjas">CodeNinjas</option>
+                <option value="Other">Other</option>
+            </select>
+
+            <label for="amount">Amount:</label>
+            <input type="number" id="amount">
+
+            <label for="date">Date:</label>
+            <input type="date" id="date">
+
+            <button id="submitBtn">Submit</button>
+            <button id="historyBtn">History</button>
+            <button id="deleteBtn">Delete</button>
+        </div>
+        
+        <div class="column output-section" id="historyOutput"></div>
+        <div class="column output-section" id="entriesOutput">
+            <h2>Entries</h2>
+        </div>
+    </div>
+
+    <script type="module" src="income.js"></script>
+</body>
+</html>
+
+
+
