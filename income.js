@@ -80,6 +80,7 @@ async function showHistory() {
             <p>Fidelity: $${fidelity.toFixed(2)}</p>
             <p>Remaining: $${remaining.toFixed(2)}</p>
         `;
+        section.style.marginBottom = '30px'; // Adjust the margin as needed
         historyOutput.appendChild(section);
     }
 }
@@ -111,10 +112,11 @@ async function showEntries() {
         entries.forEach(entry => {
             const entryDiv = document.createElement('div');
             entryDiv.innerHTML = `
-                <br><p>Job: ${entry.job}</p>
+                <p>Job: ${entry.job}</p>
                 <p>Amount: $${entry.amount.toFixed(2)}</p>
                 <p>Date: ${entry.date}</p>
             `;
+            entryDiv.style.marginBottom = '35px'; // Adjust the margin as needed
             section.appendChild(entryDiv);
         });
 
