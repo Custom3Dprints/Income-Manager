@@ -48,4 +48,40 @@ h2 {
     }
 }
 
+.main{
+    width: 100%;
+    background-color: rgb(243, 243, 243);
 
+
+}
+.title{
+    display: flex;
+
+}
+.titleleft{
+
+    width: 50%;
+    text-align: center;
+}
+.titleright{
+    width: 50%;
+    text-align: center;
+}
+
+.border{
+    border-bottom: 1px solid rgb(147, 147, 147);
+}
+
+.content{
+
+    display: flex;
+    height: max-content;
+}
+
+
+.left, .right{
+    width: 50%;
+    text-align: center;
+
+
+}
