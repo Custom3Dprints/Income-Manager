@@ -85,3 +85,25 @@ h2 {
 
 
 }
+
+
+.history-container {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 20px;
+}
+.history-column {
+    width: 48%;
+    padding: 10px;
+    border: 1px solid #ddd; /* Border to separate columns visually */
+    box-shadow: 0 0 5px rgba(0,0,0,0.1); /* Shadow for visual separation */
+    overflow-y: auto; /* Scroll if content overflows */
+}
+.history-column h2 {
+    margin-top: 0;
+}
+.history-section, .entries-section {
+    margin-bottom: 20px;
+}
+
+

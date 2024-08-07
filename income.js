@@ -158,7 +158,7 @@ async function showFullHistory() {
     // Organize data by month-year for history
     const organizedHistoryData = data.reduce((acc, curr) => {
         const date = new Date(curr.date);
-        const monthYear = `${date.getMonth() + 1}-${date.getFullYear()}`;
+        const monthYear = `${date.getMonth() + 1}/${date.getFullYear()}`;
 
         if (!acc[monthYear]) {
             acc[monthYear] = { total: 0, entries: [] };
@@ -172,8 +172,8 @@ async function showFullHistory() {
 
     // Sort the organized history data by date in descending order
     const sortedHistoryData = Object.keys(organizedHistoryData).sort((a, b) => {
-        const [monthA, yearA] = a.split('-').map(Number);
-        const [monthB, yearB] = b.split('-').map(Number);
+        const [monthA, yearA] = a.split('/').map(Number);
+        const [monthB, yearB] = b.split('/').map(Number);
         return new Date(yearB, monthB - 1) - new Date(yearA, monthA - 1);
     }).map(key => ({ monthYear: key, ...organizedHistoryData[key] }));
 
@@ -229,22 +229,6 @@ async function showFullHistory() {
         });
     });
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 window.submitData = submitData;
 window.showMonthlyBudget = showMonthlyBudget;
