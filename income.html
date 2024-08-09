@@ -7,6 +7,34 @@
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
+
+    <!-- navbar -->
+    <nav class="navbar">
+        <div class="navbar__container">
+            <a id="navbar__logo">
+                Income Tracker
+            </a>
+            <div class="navbar__toggle" id="mobile-menu">
+                <span class="bar"></span>
+                <span class="bar"></span>
+                <span class="bar"></span>
+            </div>
+            <ul class="navbar__menu">
+                <li class="navbar__">
+                    <a class="navbar__links" onclick="Home()">
+                        Home
+                    </a>
+                </li>
+                <li class="navbar__">
+                    <a class="navbar__links" onclick="incomeHistory()">
+                        History
+                    </a>
+                </li>
+            </ul>
+        </div>
+    </nav>
+
+
     <div class="container">
         <div class="column form-section">
             <h2>Input</h2>
@@ -38,7 +66,7 @@
     
     <div class="main"></div>
 
- 
+    <script src="navbar.js"></script>
     <script type="module" src="income.js"></script>
 </body>
 </html>
