@@ -1,18 +1,3 @@
-import { initializeApp } from "https://www.gstatic.com/firebasejs/9.12.1/firebase-app.js";
-import { getFirestore, collection, getDocs, addDoc, query, where, deleteDoc } from "https://www.gstatic.com/firebasejs/9.12.1/firebase-firestore.js";
-
-const firebaseConfig = {
-    apiKey: "AIzaSyDlGWR_yUnBhiPgxl7Tf3af8lUp2S4cOow",
-    authDomain: "finance-925e7.firebaseapp.com",
-    databaseURL: "https://finance-925e7-default-rtdb.firebaseio.com",
-    projectId: "finance-925e7",
-    storageBucket: "finance-925e7.appspot.com",
-    messagingSenderId: "1045461884935",
-    appId: "1:1045461884935:web:280cdbfa1eb28a272c0aa2",
-    measurementId: "G-NQNYE0ZM1C"
-};
-
-// Initialize Firebase
 const app = initializeApp(firebaseConfig);
 
 // Initialize Firestore
@@ -22,49 +7,40 @@ document.getElementById('submitBtn').addEventListener('click', submitData);
 document.getElementById('deleteBtn').addEventListener('click', deleteData);
 document.getElementById('showHistoryBtn').addEventListener('click', showFullHistory);
 
-
 async function submitData() {
     const job = document.getElementById('job').value;
     const amount = document.getElementById('amount').value;
     const dateInput = document.getElementById('date').value;
 
-    // Parse the input date string into a Date object
-    const [year, month, day] = dateInput.split('-').map(Number);
-    const dateObj = new Date(year, month - 1, day); // Month is 0-indexed
-
-    // Format the date to "month/day/year"
-    const formattedDate = `${dateObj.getMonth() + 1}/${dateObj.getDate()}/${dateObj.getFullYear()}`;
-    //console.log(formattedDate);
-
-    await addDoc(collection(db, "incomeData"), {
-        job: job,
-        amount: parseFloat(amount),
-        date: formattedDate
-    });
+    if (job && amount && dateInput) {
+        // Parse the dates into Date objects
+        const parsedDates = dates.map(date => {
+            const [month, day, year] = date.split('/').map(Number);
+            return new Date(year, month - 1, day);
+        });
+        console.log(parsedDates);
+    }
 }
+
 
 async function deleteData() {
     const job = document.getElementById('job').value;
     const amount = document.getElementById('amount').value;
-    const date = document.getElementById('date').value;
-    // Parse the input date string into a Date object
-    const [year, month, day] = date.split('-').map(Number);
-    const dateObj = new Date(year, month - 1, day); // Month is 0-indexed
+    const dateInput = document.getElementById('date').value;
 
-    // Format the date to "month/day/year"
-    const formattedDate = `${dateObj.getMonth() + 1}/${dateObj.getDate()}/${dateObj.getFullYear()}`;
-    //console.log(formattedDate);
-
-    if (!job || !date || !amount) {
+    if (!job || !dateInput || !amount) {
         alert('Please fill out job, date, and amount fields');
         return;
     }
+
+    // Format the date to MM/DD/YYYY
+    const date = new Date(dateInput).toLocaleDateString('en-US');
 
     // Query the Firestore collection to find the matching document
     const q = query(
         collection(db, "incomeData"),
         where('job', '==', job),
-        where('date', '==', formattedDate),
+        where('date', '==', date),
         where('amount', '==', parseFloat(amount))
     );
     const snapshot = await getDocs(q);
@@ -74,11 +50,17 @@ async function deleteData() {
         snapshot.forEach(async (doc) => {
             await deleteDoc(doc.ref);
         });
-        //console.log(formattedDate);
+        alert('Document deleted successfully');
     } else {
         alert('No matching document found');
     }
+
+    setTimeout(function(){
+        location.reload();
+    }, 1000);
 }
+
+
 
 async function showMonthlyBudget() {
     const budgetOutput = document.getElementById('budgetOutput');
@@ -91,11 +73,13 @@ async function showMonthlyBudget() {
     const data = snapshot.docs.map(doc => doc.data());
 
     const filteredData = data.filter(item => {
-        const date = new Date(item.date);
+        const dateParts = item.date.split('/');
+        const date = new Date(dateParts[2], dateParts[0] - 1, dateParts[1]);
         return date.getMonth() === currentMonth && date.getFullYear() === currentYear;
     });
 
     const total = filteredData.reduce((acc, curr) => acc + curr.amount, 0);
+
 
     const spendingMoney = Math.max(70, 0.20 * total);
     const mom = 100;
@@ -119,8 +103,6 @@ async function showMonthlyBudget() {
     section.style.marginBottom = '30px';
     budgetOutput.appendChild(section);
 }
-
-
 
 async function showCurrentEntries() {
     const entriesOutput = document.getElementById('entriesOutput');
@@ -264,6 +246,9 @@ window.showFullHistory = showFullHistory;
 
 document.addEventListener('DOMContentLoaded', showMonthlyBudget);
 document.addEventListener('DOMContentLoaded', showCurrentEntries);
+
+
+
 
 
 
