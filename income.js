@@ -41,6 +41,10 @@ async function submitData() {
         amount: parseFloat(amount),
         date: formattedDate
     });
+
+    setTimeout(function(){
+        location.reload();
+    }, 1000);
 }
 
 async function deleteData() {
@@ -78,6 +82,9 @@ async function deleteData() {
     } else {
         alert('No matching document found');
     }
+    setTimeout(function(){
+        location.reload();
+    }, 1000);
 }
 
 async function showMonthlyBudget() {
@@ -96,15 +103,36 @@ async function showMonthlyBudget() {
     });
 
     const total = filteredData.reduce((acc, curr) => acc + curr.amount, 0);
+    
+    let spendingMoney = Math.max(70, 0.20 * total);
+    let mom = 100;
+    let newtotal = total - spendingMoney - mom;
+    let hysa = 0.35 * newtotal;
+    let ira = 0.25 * newtotal;
+    let fidelity = 0.15 * newtotal;
+    let totalallocated = spendingMoney + mom + hysa + ira + fidelity;
+    let remaining = total - totalallocated;
 
-    const spendingMoney = Math.max(70, 0.20 * total);
-    const mom = 100;
-    const newtotal = total - spendingMoney - mom;
-    const hysa = 0.35 * newtotal;
-    const ira = 0.25 * newtotal;
-    const fidelity = 0.15 * newtotal;
-    const totalallocated = spendingMoney + mom + hysa + ira + fidelity;
-    const remaining = total - totalallocated;
+    if (total < 170 && total > 50){
+        mom = total-50;
+        spendingMoney = total-mom;
+        newtotal = 0;
+        hysa = 0;
+        ira = 0;
+        fidelity = 0;
+        totalallocated = 0;
+        remaining = 0;
+        
+    }else if (total < 50){
+        mom = 0;
+        spendingMoney = total;
+        newtotal = 0;
+        hysa = 0;
+        ira = 0;
+        fidelity = 0;
+        totalallocated = 0;
+        remaining = 0;
+    }
 
     const section = document.createElement('div');
     section.innerHTML = `
