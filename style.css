@@ -1,3 +1,6 @@
+
+
+
 .navbar{
     background: #ffffff;
     height: 80px;
@@ -96,6 +99,7 @@
 
 
 @media screen and (max-width: 960px){
+
     .navbar__container{
         display: flex;
         justify-content: space-between;
@@ -189,28 +193,66 @@
     #mobile-menu.is-active .bar:nth-child(3){
         transform: translateY(-8px) rotate(-45deg);
     }
+
+
+}
+
+* {
+    margin: 10px;
+    padding: 0;
+    box-sizing: border-box;
+}
+  
+
+
+.max_content{
+    width: max-content;
 }
 
 
 
-/* Container and Column Styling */
+/* Style the container to use flexbox for layout */
 .container {
     display: flex;
-    justify-content: space-between;
-    padding: 20px;
+    height: calc(100% - 50px); /* Adjust height to account for navbar */
+
+    flex-direction: row;
+    justify-content: space-around; /* Add space around sections */
     flex-wrap: wrap;
+    
+    width: 100%;
+}
+
+/* Style the sections inside the container */
+.column {
+    flex: 1;
+    padding: 40px; /* Adjust padding for better spacing */
+    margin: 10px; /* Add margin for separation */
+    background-color: #f9f9f9; /* Light background color for sections */
+    min-width: 300px;
+    
+    transition: box-shadow 0.3s ease;
+}
+
+/*
+.container {
+    border: 2px rgb(255, 0, 0) solid;
+    flex-wrap: wrap;
+    display: flex;
 }
 
 .column {
-    width: 30%;
+    width: 27%;
+
     padding: 20px;
+    margin: 25px;
     box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
     border-radius: 8px;
     background-color: #ffffff;
     margin-bottom: 20px;
-    transition: box-shadow 0.3s ease;
+    margin-top: 20px;
 }
-
+*/
 .column:hover {
     box-shadow: 0 0 15px rgba(0, 0, 0, 0.2);
 }
@@ -219,6 +261,7 @@
 .form-section {
     display: flex;
     flex-direction: column;
+    border-radius: 4px;
 }
 
 .form-section label, 
@@ -246,7 +289,6 @@
 .form-section input:focus, 
 .form-section select:focus {
     border-color: #4285f4;
-    background-color: #ffffff;
     outline: none;
 }
 
@@ -260,16 +302,15 @@
     transition: background-color 0.3s ease;
 }
 
+
 .form-section button:hover {
     background-color: #357ae8;
 }
 
 /* Output Section Styling */
 .output-section {
-    padding: 20px;
     box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
     border-radius: 8px;
-    background-color: #ffffff;
     overflow-y: auto;
     height: 80vh; /* Adjust as needed */
 }
@@ -314,83 +355,6 @@ h2 {
     justify-content: space-between;
     margin-top: 20px;
 }
-
-.history-column {
-    width: 48%;
-    padding: 20px;
-    border: 1px solid #ddd;
-    box-shadow: 0 0 5px rgba(0,0,0,0.1);
-    border-radius: 8px;
-    overflow-y: auto;
-    background-color: #ffffff;
-}
-
-.history-column h2 {
-    margin-top: 0;
-    color: #202124;
-}
-
-.history-section, .entries-section {
-    margin-bottom: 20px;
-}
-
-/* Media Queries for Responsive Design */
-@media (max-width: 1000px) {
-    .column {
-        min-width: 100%;
-        margin-bottom: 20px;
-    }
-
-    .output-section {
-        height: max-content;
-    }
-}
-
-
-.main{
-    width: 100%;
-    background-color: rgb(243, 243, 243);
-
-
-}
-.title{
-    display: flex;
-
-}
-.titleleft{
-
-    width: 50%;
-    text-align: center;
-}
-.titleright{
-    width: 50%;
-    text-align: center;
-}
-
-.border{
-    border-bottom: 1px solid rgb(147, 147, 147);
-}
-
-.content{
-
-    display: flex;
-    height: max-content;
-}
-
-
-.left, .right{
-    width: 50%;
-    text-align: center;
-
-
-}
-
-
-.history-container {
-    display: flex;
-    justify-content: space-between;
-    margin-top: 20px;
-}
 .history-column {
     width: 48%;
     padding: 10px;
@@ -414,4 +378,7 @@ h2 {
     cursor: pointer;
     transition: background-color 0.3s ease;
 }
+
+
+
 
