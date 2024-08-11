@@ -144,7 +144,6 @@ async function showMonthlyBudget() {
         <p>Fidelity: $${fidelity.toFixed(2)}</p>
         <p>Remaining: $${remaining.toFixed(2)}</p>
     `;
-    section.style.marginBottom = '30px';
     budgetOutput.appendChild(section);
 }
 
@@ -174,7 +173,7 @@ async function showCurrentEntries() {
             <p>Amount: $${entry.amount.toFixed(2)}</p>
             <p>Date: ${entry.date}</p>
         `;
-        entryDiv.style.marginBottom = '35px';
+        entryDiv.style.marginBottom = '30px';
         section.appendChild(entryDiv);
     });
 
