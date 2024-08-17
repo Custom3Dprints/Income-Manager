@@ -3,17 +3,15 @@ import { getFirestore, collection, getDocs, addDoc, query, where, deleteDoc } fr
 
 
 const firebaseConfig = {
-    apiKey: process.env.APIKEY,
-    authDomain: process.env.APPID,
-    databaseURL: process.env.AUTHDOMAIN,
-    projectId: process.env.DATABSEURL,
-    storageBucket: process.env.MEASUREMENTID,
-    messagingSenderId: process.env.MESSAGINGSENDERID,
-    appId: process.env.PROJECTID,
-    measurementId: process.env.STORAGEBUCKET
+    APIKEY: process.env.APIKEY,
+    APPID: process.env.APPID,
+    AUTHDOMAIN: process.env.AUTHDOMAIN,
+    DATABSEURL: process.env.DATABSEURL,
+    MEASUREMENTID: process.env.MEASUREMENTID,
+    MESSAGINGSENDERID: process.env.MESSAGINGSENDERID,
+    PROJECTID: process.env.PROJECTID,
+    STORAGEBUCKET: process.env.STORAGEBUCKET
 };
-
-
 
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
