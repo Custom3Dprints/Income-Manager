@@ -208,6 +208,13 @@ h2 {
     color: #202124;
 }
 
+
+.test{
+    height: 20vh;
+    border: 2px solid green;
+}
+
+
 /* History and Main Section Styling */
 .main {
     width: 100%;
