@@ -1,16 +1,19 @@
-import { initializeApp } from "https://www.gstatic.com/firebasejs/9.12.1/firebase-app.js";
-import { getFirestore, collection, getDocs, addDoc, query, where, deleteDoc } from "https://www.gstatic.com/firebasejs/9.12.1/firebase-firestore.js";
+import { initializeApp } from 'firebase/app';
+import { getFirestore, collection, getDocs, addDoc, query, where, deleteDoc } from 'firebase/firestore';
+
 
 const firebaseConfig = {
-    apiKey: "AIzaSyDlGWR_yUnBhiPgxl7Tf3af8lUp2S4cOow",
-    authDomain: "finance-925e7.firebaseapp.com",
-    databaseURL: "https://finance-925e7-default-rtdb.firebaseio.com",
-    projectId: "finance-925e7",
-    storageBucket: "finance-925e7.appspot.com",
-    messagingSenderId: "1045461884935",
-    appId: "1:1045461884935:web:280cdbfa1eb28a272c0aa2",
-    measurementId: "G-NQNYE0ZM1C"
+    apiKey: process.env.apiKey ,
+    authDomain: process.env.authDomain ,
+    databaseURL: process.env.databaseURL ,
+    projectId: process.env.projectId ,
+    storageBucket: process.env.storageBucket ,
+    messagingSenderId: process.env.messagingSenderId ,
+    appId: process.env.appId ,
+    measurementId: process.env.measurementId 
 };
+
+
 
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
