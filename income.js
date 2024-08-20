@@ -1,6 +1,7 @@
 import { initializeApp } from 'firebase/app';
 import { getFirestore, collection, getDocs, addDoc, query, where, deleteDoc } from 'firebase/firestore';
 
+console.log("Hello world");
 
 const firebaseConfig = {
     apiKey: process.env.apiKey ,
@@ -20,6 +21,8 @@ const app = initializeApp(firebaseConfig);
 
 // Initialize Firestore
 const db = getFirestore(app);
+
+
 
 document.getElementById('submitBtn').addEventListener('click', submitData);
 document.getElementById('deleteBtn').addEventListener('click', deleteData);
