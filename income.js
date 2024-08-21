@@ -1,7 +1,11 @@
 import { initializeApp } from 'firebase/app';
 import { getFirestore, collection, getDocs, addDoc, query, where, deleteDoc } from 'firebase/firestore';
 
-console.log("Hello world");
+
+
+
+
+
 
 const firebaseConfig = {
     apiKey: process.env.apiKey ,
@@ -289,6 +293,7 @@ async function showFullHistory() {
     });
 }
 
+
 window.submitData = submitData;
 window.showMonthlyBudget = showMonthlyBudget;
 window.deleteData = deleteData;
@@ -297,6 +302,8 @@ window.showFullHistory = showFullHistory;
 
 document.addEventListener('DOMContentLoaded', showMonthlyBudget);
 document.addEventListener('DOMContentLoaded', showCurrentEntries);
+
+
 
 
 
