@@ -21,7 +21,7 @@ const db = getFirestore(app);
 
 document.getElementById('submitBtn').addEventListener('click', submitData);
 document.getElementById('deleteBtn').addEventListener('click', deleteData);
-document.getElementById('showHistoryBtn').addEventListener('click', showFullHistory);
+//document.getElementById('showHistoryBtn').addEventListener('click', showFullHistory);
 
 async function submitData() {
     const job = document.getElementById('job').value;
@@ -183,7 +183,7 @@ async function showCurrentEntries() {
 
 
 
-//
+/*
 async function showFullHistory() {
     const mainDiv = document.querySelector('.main');
     mainDiv.innerHTML = ''; // Clear any existing content
@@ -282,13 +282,13 @@ async function showFullHistory() {
         });
     });
 }
-
+*/
 
 window.submitData = submitData;
 window.showMonthlyBudget = showMonthlyBudget;
 window.deleteData = deleteData;
 window.showCurrentEntries = showCurrentEntries;
-window.showFullHistory = showFullHistory;
+//window.showFullHistory = showFullHistory;
 
 document.addEventListener('DOMContentLoaded', showMonthlyBudget);
 document.addEventListener('DOMContentLoaded', showCurrentEntries);

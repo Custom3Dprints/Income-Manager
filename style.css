@@ -199,7 +199,8 @@
     box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
     border-radius: 8px;
     overflow-y: auto;
-    height: 80vh; /* Adjust as needed */
+    height: 88vh;  /*Adjust as needed */
+    padding-left: 40px;
 }
 
 h2 {
