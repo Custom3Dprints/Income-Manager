@@ -1,3 +1,11 @@
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+
 .navbar{
     background: #ffffff;
     height: 80px;
@@ -198,12 +206,14 @@
 
 .title {
     display: flex;
+    padding: 20px;
 }
 
 .titleleft, .titleright {
     width: 50%;
     text-align: center;
 }
+
 
 .border {
     border-bottom: 1px solid rgb(147, 147, 147);
@@ -218,6 +228,7 @@
     width: 50%;
     text-align: center;
 }
+
 
 .history-container {
     display: flex;
@@ -296,6 +307,9 @@
 
 .left{
     border-right: #dbdbdb solid 1px;
+}
+.left h3, .left p{
+    padding-bottom: 20px;
 }
 
 .history-container {
