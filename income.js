@@ -1,12 +1,6 @@
 import { initializeApp } from 'firebase/app';
 import { getFirestore, collection, getDocs, addDoc, query, where, deleteDoc } from 'firebase/firestore';
 
-
-
-
-
-
-
 const firebaseConfig = {
     apiKey: process.env.apiKey ,
     authDomain: process.env.authDomain ,
@@ -19,19 +13,15 @@ const firebaseConfig = {
 };
 
 
-
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
 
 // Initialize Firestore
 const db = getFirestore(app);
 
-
-
 document.getElementById('submitBtn').addEventListener('click', submitData);
 document.getElementById('deleteBtn').addEventListener('click', deleteData);
 document.getElementById('showHistoryBtn').addEventListener('click', showFullHistory);
-
 
 async function submitData() {
     const job = document.getElementById('job').value;
@@ -152,7 +142,7 @@ async function showMonthlyBudget() {
         <p>HYSA: $${hysa.toFixed(2)}</p>
         <p>IRA: $${ira.toFixed(2)}</p>
         <p>Fidelity: $${fidelity.toFixed(2)}</p>
-        <p>Remaining: $${remaining.toFixed(2)}</p>
+        <p>Checkings: $${remaining.toFixed(2)}</p>
     `;
     budgetOutput.appendChild(section);
 }
@@ -271,7 +261,7 @@ async function showFullHistory() {
             <p>HYSA: $${hysa.toFixed(2)}</p>
             <p>IRA: $${ira.toFixed(2)}</p>
             <p>Fidelity: $${fidelity.toFixed(2)}</p>
-            <p>Remaining: $${remaining.toFixed(2)}</p>
+            <p>Checkings: $${remaining.toFixed(2)}</p>
         `;
 
         const right = document.createElement('div');
