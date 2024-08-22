@@ -85,7 +85,7 @@ async function showFullHistory() {
             <p>HYSA: $${hysa.toFixed(2)}</p>
             <p>IRA: $${ira.toFixed(2)}</p>
             <p>Fidelity: $${fidelity.toFixed(2)}</p>
-            <p>Remaining: $${remaining.toFixed(2)}</p>
+            <p>Checkings: $${remaining.toFixed(2)}</p>
         `;
         const right = document.createElement('div');
         right.className = 'right';
