@@ -13,8 +13,9 @@ function Home() {
 }
 function incomeHistory() {
     window.location.href = "History.html";
-
-    
+}
+function spending() {
+    window.location.href = "spending.html";
 }
 
 

@@ -36,7 +36,7 @@ async function submitData() {
     const formattedDate = `${dateObj.getMonth() + 1}/${dateObj.getDate()}/${dateObj.getFullYear()}`;
     //console.log(formattedDate);
 
-    if (job == "CodeNinjas" || job == "Intrest Payment" || job == "Gift" || "Other"){
+    if (job == "CodeNinjas" || job == "Intrest Payment" || job == "Gift" || job == "Other"){
         await addDoc(collection(db, "incomeData"), {
             job: job,
             amount: parseFloat(amount),
@@ -48,7 +48,6 @@ async function submitData() {
         }, 800);
         
     }else if (job == "Spent"){
-        alert("category is 'Spent'!")
         await addDoc(collection(db, "spentHistory"),{
             job: job,
             amount: parseFloat(amount),
@@ -62,8 +61,6 @@ async function submitData() {
     }else{
         alert("Submitdata function in income.js not working!");
     }
-
-    console.log("This function is working and doesn't need to be updated");
 }
 
 async function deleteData() {
@@ -82,28 +79,44 @@ async function deleteData() {
         alert('Please fill out job, date, and amount fields');
         return;
     }
-
-    // Query the Firestore collection to find the matching document
-    const q = query(
+    
+    // Query incomeData
+    const incomeQuery = query(
         collection(db, "incomeData"),
         where('job', '==', job),
         where('date', '==', formattedDate),
         where('amount', '==', parseFloat(amount))
     );
-    const snapshot = await getDocs(q);
-
-    // If a matching document is found, delete it
-    if (!snapshot.empty) {
-        snapshot.forEach(async (doc) => {
+    const incomeSnapshot = await getDocs(incomeQuery);
+    
+    // Query spentHistory
+    const spentQuery = query(
+        collection(db, "spentHistory"),
+        where('job', '==', job),
+        where('date', '==', formattedDate),
+        where('amount', '==', parseFloat(amount))
+    );
+    const spentSnapshot = await getDocs(spentQuery);
+    
+    // Check and delete the document in the correct collection
+    if (!incomeSnapshot.empty) {
+        // Delete from incomeData
+        incomeSnapshot.forEach(async (doc) => {
             await deleteDoc(doc.ref);
+            console.log(`Document with ID: ${doc.id} deleted from incomeData`);
         });
-        //console.log(formattedDate);
+    } else if (!spentSnapshot.empty) {
+        // Delete from spentHistory
+        spentSnapshot.forEach(async (doc) => {
+            await deleteDoc(doc.ref);
+            console.log(`Document with ID: ${doc.id} deleted from spentHistory`);
+        });
+        setTimeout(function(){
+            location.reload();
+        }, 1000);
     } else {
-        alert('No matching document found');
+        console.log("No matching documents found.");
     }
-    setTimeout(function(){
-        location.reload();
-    }, 1000);
 }
 
 async function showMonthlyBudget() {

@@ -33,7 +33,7 @@ async function showFullHistory() {
     titleleft.className = "titleleft";
     title.appendChild(titleleft);
     titleleft.innerHTML = `<h1>History</h1>`;
-    const titleright = document.createElement('div');
+    const titleright = document.createElement('div');   
     titleright.className = "titleright";
     title.appendChild(titleright);
     titleright.innerHTML = `<h1>Entries</h1>`;
@@ -69,6 +69,7 @@ async function showFullHistory() {
         const left = document.createElement('div');
         left.className = 'left';
         content.appendChild(left);
+
         const spendingMoney = Math.max(70, 0.20 * total);
         const mom = 100;
         const newtotal = total - spendingMoney - mom;
@@ -77,6 +78,7 @@ async function showFullHistory() {
         const fidelity = 0.15 * newtotal;
         const totalallocated = spendingMoney + mom + hysa + ira + fidelity;
         const remaining = total - totalallocated;
+
         left.innerHTML = `
             <h3>${monthYear}</h3>
             <p>Total Income: $${total.toFixed(2)}</p>
@@ -87,9 +89,12 @@ async function showFullHistory() {
             <p>Fidelity: $${fidelity.toFixed(2)}</p>
             <p>Checkings: $${remaining.toFixed(2)}</p>
         `;
+
+
         const right = document.createElement('div');
         right.className = 'right';
         content.appendChild(right);
+        
         entries.forEach(entry => {
             const entryDiv = document.createElement('div');
             entryDiv.innerHTML = `
