@@ -36,15 +36,34 @@ async function submitData() {
     const formattedDate = `${dateObj.getMonth() + 1}/${dateObj.getDate()}/${dateObj.getFullYear()}`;
     //console.log(formattedDate);
 
-    await addDoc(collection(db, "incomeData"), {
-        job: job,
-        amount: parseFloat(amount),
-        date: formattedDate
-    });
+    if (job == "CodeNinjas" || job == "Intrest Payment" || job == "Gift" || "Other"){
+        await addDoc(collection(db, "incomeData"), {
+            job: job,
+            amount: parseFloat(amount),
+            date: formattedDate
+        });
+    
+        setTimeout(function(){
+            location.reload();
+        }, 800);
+        
+    }else if (job == "Spent"){
+        alert("category is 'Spent'!")
+        await addDoc(collection(db, "spentHistory"),{
+            job: job,
+            amount: parseFloat(amount),
+            date: formattedDate
+        });
 
-    setTimeout(function(){
-        location.reload();
-    }, 1000);
+        setTimeout(function(){
+            location.reload();
+        }, 800);
+
+    }else{
+        alert("Submitdata function in income.js not working!");
+    }
+
+    console.log("This function is working and doesn't need to be updated");
 }
 
 async function deleteData() {
@@ -99,7 +118,7 @@ async function showMonthlyBudget() {
 
     const filteredData = data.filter(item => {
         const date = new Date(item.date);
-        return date.getMonth() === currentMonth && date.getFullYear() === currentYear;
+        return date.getMonth() === currentMonth && date.getFullYear() === currentYear && item.job !== "Spent";//
     });
 
     const total = filteredData.reduce((acc, curr) => acc + curr.amount, 0);
@@ -115,13 +134,13 @@ async function showMonthlyBudget() {
 
     if (total < 170 && total > 50){
         mom = total-50;
-        spendingMoney = total-mom;
+        spendingMoney = 0;
         newtotal = 0;
         hysa = 0;
         ira = 0;
         fidelity = 0;
         totalallocated = 0;
-        remaining = 0;
+        remaining = total-mom;
         
     }else if (total < 50){
         mom = 0;
@@ -162,7 +181,7 @@ async function showCurrentEntries() {
     const filteredData = data.filter(item => {
         const dateParts = item.date.split('/');
         const date = new Date(dateParts[2], dateParts[0] - 1, dateParts[1]);
-        return date.getMonth() === currentMonth && date.getFullYear() === currentYear;
+        return date.getMonth() === currentMonth && date.getFullYear() === currentYear && item.job !== "Spent";//
     });
 
     const section = document.createElement('div');
