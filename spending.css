@@ -245,8 +245,7 @@
     width: 100%;
 
     display: flex;             /* Use flexbox for centering */
-    justify-content: center;   /* Center horizontally */
-    align-items: center;       /* Center vertically (if height is set) */
+    justify-content: left;   /* Center horizontally */
     flex-wrap: wrap;
 
     border-bottom: grey 1px solid;
@@ -263,4 +262,8 @@
 }
 
 
-
+@media screen and (max-width: 800px){
+    .entryContainer{
+        justify-content: center;
+    }
+}
