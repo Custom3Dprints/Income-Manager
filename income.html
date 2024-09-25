@@ -44,13 +44,20 @@
             <div class="column form-section">
                 <h2>Input</h2>
                 <label for="job">Category:</label>
-                <select id="job">
+                <select id="job" name="job" onchange="showTextbox()">
                     <option value="CodeNinjas">CodeNinjas</option>
                     <option value="Interest Payment">Interest Payment</option>
                     <option value="Gift">Gift</option>
                     <option value="Other">Other</option>
                     <option value="Spent">Spent</option>
                 </select>
+
+                <!-- Hidden textbox initially -->
+                <div id="textBoxDiv" style="display:none;">
+                    <label for="spentDescription">Describe your spending:</label><br>
+                    <input type="text" id="spentDescription" name="spentDescription">
+                </div>
+              
     
                 <label for="amount">Amount:</label>
                 <input type="number" id="amount">
@@ -86,6 +93,19 @@
 
     <script src="navbar.js"></script>
     <script type="module" src="income.js"></script>
+    <script>
+        function showTextbox() {
+            const transactionType = document.getElementById("job").value;
+            const textBoxDiv = document.getElementById("textBoxDiv");
+
+            // Show textbox if "Spent" is selected, hide otherwise
+            if (transactionType === "Spent") {
+              textBoxDiv.style.display = "block";
+            } else {
+              textBoxDiv.style.display = "none";
+            }
+        }
+    </script>
 </body>
 </html>
 

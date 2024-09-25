@@ -78,7 +78,9 @@ async function Spent(){
             
             entryDiv.innerHTML = `
                 <p id="entriesSpent">Spent: -$${entry.amount.toFixed(2)}</p>
+                <p id="description">${entry.description}</p>
                 <p id="entriesDate">Date: ${entry.date}</p>
+
             `
             entryDiv.className = "entriesDiv";
             entryContainer.appendChild(entryDiv);

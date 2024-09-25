@@ -36,6 +36,9 @@ async function submitData() {
     const formattedDate = `${dateObj.getMonth() + 1}/${dateObj.getDate()}/${dateObj.getFullYear()}`;
     //console.log(formattedDate);
 
+    // Get the value from the new text box for "Spent"
+    const spentDescription = job === "Spent" ? document.getElementById('spentDescription').value.trim() : null;
+
     if (job == "CodeNinjas" || job == "Intrest Payment" || job == "Gift" || job == "Other"){
         await addDoc(collection(db, "incomeData"), {
             job: job,
@@ -50,6 +53,7 @@ async function submitData() {
     }else if (job == "Spent"){
         await addDoc(collection(db, "spentHistory"),{
             job: job,
+            description: spentDescription,
             amount: parseFloat(amount),
             date: formattedDate
         });
@@ -315,6 +319,8 @@ async function showFullHistory() {
     });
 }
 */
+
+
 
 window.submitData = submitData;
 window.showMonthlyBudget = showMonthlyBudget;
