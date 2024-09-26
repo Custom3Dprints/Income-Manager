@@ -58,7 +58,7 @@ async function Spent(){
 
         content.innerHTML = `
             <p id="monthyear">${monthYear}</p>
-            <p id="total">Total spent: -$${total}</p>
+            <p id="total">Total spent: -$${total.toFixed(2)}</p>
         `
 
         const entryContainer = document.createElement('div');
