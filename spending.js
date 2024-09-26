@@ -77,8 +77,8 @@ async function Spent(){
             const entryDiv = document.createElement('div');
             
             entryDiv.innerHTML = `
+                <p id="description">${entry.description.split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')}</p>
                 <p id="entriesSpent">Spent: -$${entry.amount.toFixed(2)}</p>
-                <p id="description">${entry.description}</p>
                 <p id="entriesDate">Date: ${entry.date}</p>
 
             `
