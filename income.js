@@ -109,6 +109,10 @@ async function deleteData() {
             await deleteDoc(doc.ref);
             console.log(`Document with ID: ${doc.id} deleted from incomeData`);
         });
+        setTimeout(function(){
+            location.reload();
+        }, 1000);
+        
     } else if (!spentSnapshot.empty) {
         // Delete from spentHistory
         spentSnapshot.forEach(async (doc) => {
