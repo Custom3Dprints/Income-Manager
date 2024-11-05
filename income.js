@@ -163,15 +163,15 @@ async function showMonthlyBudget() {
         totalallocated = 0;
         remaining = total-mom;
         
-    }else if (total < 50){
+    }else if (total <= 50){
         mom = 0;
-        spendingMoney = total;
+        spendingMoney = 0;
         newtotal = 0;
         hysa = 0;
         ira = 0;
         fidelity = 0;
         totalallocated = 0;
-        remaining = 0;
+        remaining = total;
     }
 
     const section = document.createElement('div');
@@ -186,8 +186,6 @@ async function showMonthlyBudget() {
     `;
     budgetOutput.appendChild(section);
 }
-
-
 
 async function showCurrentEntries() {
     const entriesOutput = document.getElementById('entriesOutput');
@@ -219,9 +217,6 @@ async function showCurrentEntries() {
 
     entriesOutput.appendChild(section);
 }
-
-
-
 
 /*
 async function showFullHistory() {
