@@ -1,15 +1,15 @@
 import { initializeApp } from 'firebase/app';
-import { getFirestore, collection, getDocs, addDoc, query, where, deleteDoc } from 'firebase/firestore';
+import { getFirestore, collection, getDocs, addDoc, deleteDoc } from 'firebase/firestore';
 
 const firebaseConfig = {
-    apiKey: process.env.apiKey ,
-    authDomain: process.env.authDomain ,
-    databaseURL: process.env.databaseURL ,
-    projectId: process.env.projectId ,
-    storageBucket: process.env.storageBucket ,
-    messagingSenderId: process.env.messagingSenderId ,
-    appId: process.env.appId ,
-    measurementId: process.env.measurementId 
+    apiKey: process.env.apiKey,
+    authDomain: process.env.authDomain,
+    databaseURL: process.env.databaseURL,
+    projectId: process.env.projectId,
+    storageBucket: process.env.storageBucket,
+    messagingSenderId: process.env.messagingSenderId,
+    appId: process.env.appId,
+    measurementId: process.env.measurementId
 };
 
 
@@ -20,8 +20,15 @@ const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
 document.getElementById('submitBtn').addEventListener('click', submitData);
-document.getElementById('deleteBtn').addEventListener('click', deleteData);
+const deleteSelectedBtn = document.getElementById('deleteSelectedBtn');
+
+if (deleteSelectedBtn) {
+    deleteSelectedBtn.addEventListener('click', deleteSelectedEntries);
+}
+
 //document.getElementById('showHistoryBtn').addEventListener('click', showFullHistory);
+
+let monthEntries = [];
 
 async function submitData() {
     const job = document.getElementById('job').value;
@@ -64,66 +71,6 @@ async function submitData() {
 
     }else{
         alert("Submitdata function in income.js not working!");
-    }
-}
-
-async function deleteData() {
-    const job = document.getElementById('job').value;
-    const amount = document.getElementById('amount').value;
-    const date = document.getElementById('date').value;
-    // Parse the input date string into a Date object
-    const [year, month, day] = date.split('-').map(Number);
-    const dateObj = new Date(year, month - 1, day); // Month is 0-indexed
-
-    // Format the date to "month/day/year"
-    const formattedDate = `${dateObj.getMonth() + 1}/${dateObj.getDate()}/${dateObj.getFullYear()}`;
-    //console.log(formattedDate);
-
-    if (!job || !date || !amount) {
-        alert('Please fill out job, date, and amount fields');
-        return;
-    }
-    
-    // Query incomeData
-    const incomeQuery = query(
-        collection(db, "incomeData"),
-        where('job', '==', job),
-        where('date', '==', formattedDate),
-        where('amount', '==', parseFloat(amount))
-    );
-    const incomeSnapshot = await getDocs(incomeQuery);
-    
-    // Query spentHistory
-    const spentQuery = query(
-        collection(db, "spentHistory"),
-        where('job', '==', job),
-        where('date', '==', formattedDate),
-        where('amount', '==', parseFloat(amount))
-    );
-    const spentSnapshot = await getDocs(spentQuery);
-    
-    // Check and delete the document in the correct collection
-    if (!incomeSnapshot.empty) {
-        // Delete from incomeData
-        incomeSnapshot.forEach(async (doc) => {
-            await deleteDoc(doc.ref);
-            console.log(`Document with ID: ${doc.id} deleted from incomeData`);
-        });
-        setTimeout(function(){
-            location.reload();
-        }, 1000);
-        
-    } else if (!spentSnapshot.empty) {
-        // Delete from spentHistory
-        spentSnapshot.forEach(async (doc) => {
-            await deleteDoc(doc.ref);
-            console.log(`Document with ID: ${doc.id} deleted from spentHistory`);
-        });
-        setTimeout(function(){
-            location.reload();
-        }, 1000);
-    } else {
-        console.log("No matching documents found.");
     }
 }
 
@@ -189,33 +136,116 @@ async function showMonthlyBudget() {
 
 async function showCurrentEntries() {
     const entriesOutput = document.getElementById('entriesOutput');
-    entriesOutput.innerHTML = '<h2>Entries</h2>';
+    entriesOutput.innerHTML = '';
 
     const currentMonth = new Date().getMonth();
     const currentYear = new Date().getFullYear();
 
-    const snapshot = await getDocs(collection(db, 'incomeData'));
-    const data = snapshot.docs.map(doc => doc.data());
+    const [incomeSnap, spentSnap] = await Promise.all([
+        getDocs(collection(db, 'incomeData')),
+        getDocs(collection(db, 'spentHistory'))
+    ]);
 
-    const filteredData = data.filter(item => {
+    const incomeData = incomeSnap.docs.map(doc => ({
+        id: doc.id,
+        ref: doc.ref,
+        ...doc.data()
+    }));
+
+    const spentData = spentSnap.docs.map(doc => ({
+        id: doc.id,
+        ref: doc.ref,
+        ...doc.data()
+    }));
+
+    const filteredData = [...incomeData, ...spentData].filter(item => {
         const dateParts = item.date.split('/');
         const date = new Date(dateParts[2], dateParts[0] - 1, dateParts[1]);
-        return date.getMonth() === currentMonth && date.getFullYear() === currentYear && item.job !== "Spent";//
+        return date.getMonth() === currentMonth && date.getFullYear() === currentYear;
     });
 
-    const section = document.createElement('div');
-    filteredData.forEach(entry => {
+    monthEntries = filteredData;
+
+    const sorted = [...filteredData].sort((a, b) => {
+        const aParts = a.date.split('/');
+        const bParts = b.date.split('/');
+        const aDate = new Date(aParts[2], aParts[0] - 1, aParts[1]);
+        const bDate = new Date(bParts[2], bParts[0] - 1, bParts[1]);
+        return bDate - aDate;
+    });
+
+    if (!sorted.length) {
+        entriesOutput.innerHTML = '<p class="helper-text">No entries this month.</p>';
+        return;
+    }
+
+    sorted.forEach(entry => {
         const entryDiv = document.createElement('div');
-        entryDiv.innerHTML = `
-            <p>Job: ${entry.job}</p>
-            <p>Amount: $${entry.amount.toFixed(2)}</p>
-            <p>Date: ${entry.date}</p>
-        `;
-        entryDiv.style.marginBottom = '30px';
-        section.appendChild(entryDiv);
-    });
+        entryDiv.className = 'entry-row';
 
-    entriesOutput.appendChild(section);
+        const checkbox = document.createElement('input');
+        checkbox.type = 'checkbox';
+        checkbox.className = 'entry-checkbox';
+        checkbox.value = entry.id;
+        checkbox.setAttribute('aria-label', `Select ${entry.job} on ${entry.date}`);
+
+        const content = document.createElement('div');
+        content.className = 'entry-content';
+
+        const header = document.createElement('div');
+        header.className = 'entry-header';
+        header.innerHTML = `<strong>${entry.job}</strong> <span class="entry-amount">$${entry.amount.toFixed(2)}</span>`;
+
+        const dateEl = document.createElement('p');
+        dateEl.textContent = `Date: ${entry.date}`;
+
+        content.appendChild(header);
+        content.appendChild(dateEl);
+
+        if (entry.description) {
+            const desc = document.createElement('p');
+            desc.textContent = `Note: ${entry.description}`;
+            content.appendChild(desc);
+        }
+
+        entryDiv.appendChild(checkbox);
+        entryDiv.appendChild(content);
+        entriesOutput.appendChild(entryDiv);
+    });
+}
+
+async function deleteSelectedEntries() {
+    const checkboxes = Array.from(document.querySelectorAll('.entry-checkbox:checked'));
+    if (!checkboxes.length) {
+        alert('Select at least one entry to delete.');
+        return;
+    }
+
+    if (!confirm(`Delete ${checkboxes.length} selected entr${checkboxes.length === 1 ? 'y' : 'ies'}?`)) {
+        return;
+    }
+
+    if (!confirm('This cannot be undone. Confirm delete?')) {
+        return;
+    }
+
+    const mapById = monthEntries.reduce((acc, entry) => {
+        acc[entry.id] = entry;
+        return acc;
+    }, {});
+
+    await Promise.all(
+        checkboxes.map(box => {
+            const entry = mapById[box.value];
+            if (entry && entry.ref) {
+                return deleteDoc(entry.ref);
+            }
+            return Promise.resolve();
+        })
+    );
+
+    await showCurrentEntries();
+    await showMonthlyBudget();
 }
 
 /*
@@ -323,13 +353,7 @@ async function showFullHistory() {
 
 window.submitData = submitData;
 window.showMonthlyBudget = showMonthlyBudget;
-window.deleteData = deleteData;
 window.showCurrentEntries = showCurrentEntries;
-//window.showFullHistory = showFullHistory;
 
 document.addEventListener('DOMContentLoaded', showMonthlyBudget);
 document.addEventListener('DOMContentLoaded', showCurrentEntries);
-
-
-
-

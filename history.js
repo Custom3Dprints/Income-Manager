@@ -1,110 +1,167 @@
 import { initializeApp } from 'firebase/app';
-import { getFirestore, collection, getDocs, addDoc, query, where, deleteDoc } from 'firebase/firestore';
-
+import { getFirestore, collection, getDocs } from 'firebase/firestore';
 
 const firebaseConfig = {
-    apiKey: process.env.apiKey ,
-    authDomain: process.env.authDomain ,
-    databaseURL: process.env.databaseURL ,
-    projectId: process.env.projectId ,
-    storageBucket: process.env.storageBucket ,
-    messagingSenderId: process.env.messagingSenderId ,
-    appId: process.env.appId ,
-    measurementId: process.env.measurementId 
+    apiKey: process.env.apiKey,
+    authDomain: process.env.authDomain,
+    databaseURL: process.env.databaseURL,
+    projectId: process.env.projectId,
+    storageBucket: process.env.storageBucket,
+    messagingSenderId: process.env.messagingSenderId,
+    appId: process.env.appId,
+    measurementId: process.env.measurementId
 };
 
-
-
-// Initialize Firebase
 const app = initializeApp(firebaseConfig);
-
-// Initialize Firestore
 const db = getFirestore(app);
 
-//
-async function showFullHistory() {
+let allEntries = [];
+
+document.addEventListener('DOMContentLoaded', initHistory);
+
+async function initHistory() {
     const mainDiv = document.querySelector('.main');
-    mainDiv.innerHTML = ''; // Clear any existing content
-    // Create a new div element for the title
-    const title = document.createElement('div');
-    title.className = "title";
-    mainDiv.appendChild(title);
-    const titleleft = document.createElement('div');
-    titleleft.className = "titleleft";
-    title.appendChild(titleleft);
-    titleleft.innerHTML = `<h1>History</h1>`;
-    const titleright = document.createElement('div');   
-    titleright.className = "titleright";
-    title.appendChild(titleright);
-    titleright.innerHTML = `<h1>Entries</h1>`;
-    // Retrieve all data from Firestore
-    const snapshot = await getDocs(collection(db, 'incomeData'));
-    const data = snapshot.docs.map(doc => doc.data());
-    // Organize data by month-year for history
-    const organizedHistoryData = data.reduce((acc, curr) => {
-        const dateParts = curr.date.split('/');
-        const date = new Date(dateParts[2], dateParts[0] - 1, dateParts[1]);
-        const monthYear = `${date.getMonth() + 1}/${date.getFullYear()}`;
-        if (!acc[monthYear]) {
-            acc[monthYear] = { total: 0, entries: [] };
-        }
-        acc[monthYear].total += curr.amount;
-        acc[monthYear].entries.push(curr);
+    if (!mainDiv) return;
+
+    mainDiv.innerHTML = '';
+    mainDiv.classList.add('history-shell');
+
+    const controls = document.createElement('div');
+    controls.className = 'history-controls';
+    controls.innerHTML = `
+        <div>
+            <h1>History</h1>
+            <p class="subtext">Browse prior months (current month hidden), search by job or note.</p>
+        </div>
+        <div class="history-filters">
+            <input type="search" id="historySearch" placeholder="Search by job, description, or date">
+        </div>
+    `;
+    mainDiv.appendChild(controls);
+
+    const list = document.createElement('div');
+    list.id = 'historyList';
+    list.className = 'history-list';
+    mainDiv.appendChild(list);
+
+    allEntries = await loadEntries();
+    renderHistory(allEntries, '');
+
+    const searchInput = document.getElementById('historySearch');
+    if (searchInput) {
+        searchInput.addEventListener('input', (e) => {
+            renderHistory(allEntries, e.target.value);
+        });
+    }
+}
+
+async function loadEntries() {
+    const [incomeSnap, spentSnap] = await Promise.all([
+        getDocs(collection(db, 'incomeData')),
+        getDocs(collection(db, 'spentHistory'))
+    ]);
+
+    const incomeData = incomeSnap.docs.map(doc => ({
+        id: doc.id,
+        type: 'Income',
+        ...doc.data()
+    }));
+
+    const spentData = spentSnap.docs.map(doc => ({
+        id: doc.id,
+        type: 'Spent',
+        ...doc.data()
+    }));
+
+    return [...incomeData, ...spentData].map(item => ({
+        ...item,
+        dateObj: parseDate(item.date)
+    }));
+}
+
+function parseDate(dateStr) {
+    const [m, d, y] = dateStr.split('/').map(Number);
+    return new Date(y, m - 1, d);
+}
+
+function formatMonth(dateObj) {
+    return dateObj.toLocaleString('default', { month: 'long', year: 'numeric' });
+}
+
+function renderHistory(entries, searchTerm) {
+    const list = document.getElementById('historyList');
+    if (!list) return;
+    list.innerHTML = '';
+
+    const current = new Date();
+    const currentMonth = current.getMonth();
+    const currentYear = current.getFullYear();
+
+    const filtered = entries.filter(e => {
+        const term = searchTerm.trim().toLowerCase();
+        const matchesTerm = !term || `${e.job} ${e.description || ''} ${e.date}`.toLowerCase().includes(term);
+        const isCurrentMonth = e.dateObj.getMonth() === currentMonth && e.dateObj.getFullYear() === currentYear;
+        return matchesTerm && !isCurrentMonth;
+    });
+
+    const grouped = filtered.reduce((acc, entry) => {
+        const key = `${entry.dateObj.getFullYear()}-${entry.dateObj.getMonth() + 1}`;
+        if (!acc[key]) acc[key] = [];
+        acc[key].push(entry);
         return acc;
     }, {});
-    // Sort the organized history data by date in descending order
-    const sortedHistoryData = Object.keys(organizedHistoryData).sort((a, b) => {
-        const [monthA, yearA] = a.split('/').map(Number);
-        const [monthB, yearB] = b.split('/').map(Number);
-        return new Date(yearB, monthB - 1) - new Date(yearA, monthA - 1);
-    }).map(key => ({ monthYear: key, ...organizedHistoryData[key] }));
-    // Add history and entries data to content divs
-    sortedHistoryData.forEach(({ monthYear, total, entries }) => {
-        const border = document.createElement('div');
-        border.className = 'border';
-        mainDiv.appendChild(border);
-        const content = document.createElement('div');
-        content.className = 'content';
-        border.appendChild(content);
-        const left = document.createElement('div');
-        left.className = 'left';
-        content.appendChild(left);
 
-        const spendingMoney = Math.max(70, 0.20 * total);
-        const mom = 100;
-        const newtotal = total - spendingMoney - mom;
-        const hysa = 0.35 * newtotal;
-        const ira = 0.25 * newtotal;
-        const fidelity = 0.15 * newtotal;
-        const totalallocated = spendingMoney + mom + hysa + ira + fidelity;
-        const remaining = total - totalallocated;
+    const monthKeys = Object.keys(grouped).sort((a, b) => new Date(b.split('-').join('-')) - new Date(a.split('-').join('-')));
 
-        left.innerHTML = `
-            <h3>${monthYear}</h3>
-            <p>Total Income: $${total.toFixed(2)}</p>
-            <p>Spending: $${spendingMoney.toFixed(2)}</p>
-            <p>Mom: $${mom.toFixed(2)}</p>
-            <p>HYSA: $${hysa.toFixed(2)}</p>
-            <p>IRA: $${ira.toFixed(2)}</p>
-            <p>Fidelity: $${fidelity.toFixed(2)}</p>
-            <p>Checkings: $${remaining.toFixed(2)}</p>
+    if (!monthKeys.length) {
+        list.innerHTML = '<p class="helper-text">No past-month entries found.</p>';
+        return;
+    }
+
+    monthKeys.forEach(key => {
+        const monthEntries = grouped[key].sort((a, b) => b.dateObj - a.dateObj);
+        const monthLabel = formatMonth(monthEntries[0].dateObj);
+        const incomeTotal = monthEntries.filter(e => e.type === 'Income').reduce((sum, e) => sum + (e.amount || 0), 0);
+        const spentTotal = monthEntries.filter(e => e.type === 'Spent').reduce((sum, e) => sum + (e.amount || 0), 0);
+        const net = incomeTotal - spentTotal;
+
+        const details = document.createElement('details');
+        details.className = 'month-panel';
+
+        const summary = document.createElement('summary');
+        summary.innerHTML = `
+            <div class="month-header">
+                <div>
+                    <h3>${monthLabel}</h3>
+                    <p class="subtext">Income: $${incomeTotal.toFixed(2)} · Spent: -$${spentTotal.toFixed(2)} · Net: $${net.toFixed(2)}</p>
+                </div>
+                <span class="chevron">▼</span>
+            </div>
         `;
+        details.appendChild(summary);
 
+        const entryList = document.createElement('div');
+        entryList.className = 'month-entries';
 
-        const right = document.createElement('div');
-        right.className = 'right';
-        content.appendChild(right);
-        
-        entries.forEach(entry => {
-            const entryDiv = document.createElement('div');
-            entryDiv.innerHTML = `
-                <p>Job: ${entry.job}</p>
-                <p>Amount: $${entry.amount.toFixed(2)}</p>
-                <p>Date: ${entry.date}</p>
+        monthEntries.forEach(entry => {
+            const row = document.createElement('div');
+            row.className = 'history-entry';
+            const badgeClass = entry.type === 'Spent' ? 'badge spent' : 'badge income';
+            const amountSign = entry.type === 'Spent' ? '-' : '+';
+
+            row.innerHTML = `
+                <div class="history-entry__top">
+                    <span class="${badgeClass}">${entry.job}</span>
+                    <span class="history-amount ${entry.type === 'Spent' ? 'neg' : 'pos'}">${amountSign}$${Math.abs(entry.amount || 0).toFixed(2)}</span>
+                </div>
+                <p class="history-date">${entry.date}</p>
+                ${entry.description ? `<p class="history-note">${entry.description}</p>` : ''}
             `;
-            entryDiv.style.marginBottom = '30px';
-            right.appendChild(entryDiv);
+
+            entryList.appendChild(row);
         });
+
+        details.appendChild(entryList);
+        list.appendChild(details);
     });
 }
-document.addEventListener('DOMContentLoaded', showFullHistory);

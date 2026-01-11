@@ -46,8 +46,6 @@
                 <label for="job">Category:</label>
                 <select id="job" name="job" onchange="showTextbox()">
                     <option value="W2">W2</option>
-                    <option value="Tutoring">Tutoring</option>
-                    <option value="Interest Payment">Interest Payment</option>
                     <option value="Gift">Gift</option>
                     <option value="Other">Other</option>
                     <option value="Spent">Spent</option>
@@ -67,14 +65,18 @@
                 <input type="date" id="date">
     
                 <button id="submitBtn">Submit</button>
-                <button id="deleteBtn">Delete</button>
             </div>
             
             <div class="column output-section" id="budgetOutput">
                 <h2>Monthly Budget</h2>
             </div>
-            <div class="column output-section" id="entriesOutput">
+
+            <div class="column output-section">
                 <h2>Entries</h2>
+                <div id="entriesOutput" class="entries-list"></div>
+                <div class="entries-actions">
+                    <button id="deleteSelectedBtn" class="ghost-btn">Delete Selected</button>
+                </div>
             </div>
         </div>
     
@@ -93,7 +95,6 @@
     <script src="dist/income.bundle.js"></script>
 
     <script src="navbar.js"></script>
-    <script type="module" src="income.js"></script>
     <script>
         function showTextbox() {
             const transactionType = document.getElementById("job").value;

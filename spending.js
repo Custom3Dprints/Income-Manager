@@ -1,95 +1,172 @@
 import { initializeApp } from 'firebase/app';
-import { getFirestore, collection, getDocs, addDoc, query, where, deleteDoc } from 'firebase/firestore';
-
+import { getFirestore, collection, getDocs } from 'firebase/firestore';
 
 const firebaseConfig = {
-    apiKey: process.env.apiKey ,
-    authDomain: process.env.authDomain ,
-    databaseURL: process.env.databaseURL ,
-    projectId: process.env.projectId ,
-    storageBucket: process.env.storageBucket ,
-    messagingSenderId: process.env.messagingSenderId ,
-    appId: process.env.appId ,
-    measurementId: process.env.measurementId 
+    apiKey: process.env.apiKey,
+    authDomain: process.env.authDomain,
+    databaseURL: process.env.databaseURL,
+    projectId: process.env.projectId,
+    storageBucket: process.env.storageBucket,
+    messagingSenderId: process.env.messagingSenderId,
+    appId: process.env.appId,
+    measurementId: process.env.measurementId
 };
 
-
-
-// Initialize Firebase
 const app = initializeApp(firebaseConfig);
-
-// Initialize Firestore
 const db = getFirestore(app);
 
+let spentEntries = [];
 
-async function Spent(){
-    // Retrieve all data from Firestore
-    const snapshot = await getDocs(collection(db, 'spentHistory'));
-    const data = snapshot.docs.map(doc => doc.data());
-    // Organize data by month-year for history
-    const organizedHistoryData = data.reduce((acc, curr) => {
-        const dateParts = curr.date.split('/');
-        const date = new Date(dateParts[2], dateParts[0] - 1, dateParts[1]);
-        const monthYear = `${date.getMonth() + 1}/${date.getFullYear()}`;
-        if (!acc[monthYear]) {
-            acc[monthYear] = { total: 0, entries: [] };
-        }
-        acc[monthYear].total += curr.amount;
-        acc[monthYear].entries.push(curr);
+document.addEventListener('DOMContentLoaded', initSpending);
+
+async function initSpending() {
+    const main = document.querySelector('.main');
+    if (!main) return;
+
+    main.innerHTML = '';
+    main.classList.add('spending-shell');
+
+    const controls = document.createElement('div');
+    controls.className = 'spending-controls';
+    controls.innerHTML = `
+        <div>
+            <h1>Spending</h1>
+            <p class="subtext">Filter by month, search by description, and see totals at a glance.</p>
+        </div>
+        <div class="spending-filters">
+            <select id="monthFilter">
+                <option value="all">All months</option>
+            </select>
+            <input type="search" id="spendSearch" placeholder="Search description or date">
+        </div>
+    `;
+    main.appendChild(controls);
+
+    const list = document.createElement('div');
+    list.id = 'spendingList';
+    list.className = 'spending-list';
+    main.appendChild(list);
+
+    spentEntries = await loadSpent();
+    populateMonthFilter(spentEntries);
+    renderSpending(spentEntries, 'all', '');
+
+    const monthSelect = document.getElementById('monthFilter');
+    const searchInput = document.getElementById('spendSearch');
+
+    if (monthSelect) {
+        monthSelect.addEventListener('change', () => {
+            renderSpending(spentEntries, monthSelect.value, searchInput ? searchInput.value : '');
+        });
+    }
+
+    if (searchInput) {
+        searchInput.addEventListener('input', () => {
+            renderSpending(spentEntries, monthSelect ? monthSelect.value : 'all', searchInput.value);
+        });
+    }
+}
+
+async function loadSpent() {
+    const snap = await getDocs(collection(db, 'spentHistory'));
+    return snap.docs.map(doc => {
+        const data = doc.data();
+        const dateObj = parseDate(data.date);
+        const monthKey = `${dateObj.getFullYear()}-${String(dateObj.getMonth() + 1).padStart(2, '0')}`;
+        return {
+            id: doc.id,
+            ref: doc.ref,
+            ...data,
+            dateObj,
+            monthKey
+        };
+    });
+}
+
+function parseDate(dateStr) {
+    const [m, d, y] = dateStr.split('/').map(Number);
+    return new Date(y, m - 1, d);
+}
+
+function monthLabel(monthKey) {
+    const [y, m] = monthKey.split('-').map(Number);
+    return new Date(y, m - 1, 1).toLocaleString('default', { month: 'long', year: 'numeric' });
+}
+
+function populateMonthFilter(entries) {
+    const select = document.getElementById('monthFilter');
+    if (!select) return;
+    const months = Array.from(new Set(entries.map(e => e.monthKey))).sort((a, b) => new Date(b) - new Date(a));
+    months.forEach(key => {
+        const opt = document.createElement('option');
+        opt.value = key;
+        opt.textContent = monthLabel(key);
+        select.appendChild(opt);
+    });
+}
+
+function renderSpending(entries, monthFilter, searchTerm) {
+    const list = document.getElementById('spendingList');
+    if (!list) return;
+    list.innerHTML = '';
+
+    const filtered = entries.filter(e => {
+        const matchesMonth = monthFilter === 'all' || e.monthKey === monthFilter;
+        const term = searchTerm.trim().toLowerCase();
+        const matchesSearch = !term || `${e.description || ''} ${e.date}`.toLowerCase().includes(term);
+        return matchesMonth && matchesSearch;
+    });
+
+    const grouped = filtered.reduce((acc, entry) => {
+        if (!acc[entry.monthKey]) acc[entry.monthKey] = [];
+        acc[entry.monthKey].push(entry);
         return acc;
     }, {});
 
-    // Sort the organized history data by date in descending order
-    const sortedHistoryData = Object.keys(organizedHistoryData).sort((a, b) => {
-        const [monthA, yearA] = a.split('/').map(Number);
-        const [monthB, yearB] = b.split('/').map(Number);
-        return new Date(yearB, monthB - 1) - new Date(yearA, monthA - 1);
-    }).map(key => ({ monthYear: key, ...organizedHistoryData[key] }));
+    const monthKeys = Object.keys(grouped).sort((a, b) => new Date(b) - new Date(a));
 
+    if (!monthKeys.length) {
+        list.innerHTML = '<p class="helper-text">No spending matches your filters.</p>';
+        return;
+    }
 
-    const containerDiv = document.querySelector('.container');
-    
-    
-    // Add history and entries data to content divs
-    sortedHistoryData.forEach(({ monthYear, total, entries }) => {
-        const content = document.createElement('div');
-        content.className = "content";
-        containerDiv.appendChild(content);
+    monthKeys.forEach(key => {
+        const monthEntries = grouped[key].sort((a, b) => b.dateObj - a.dateObj);
+        const total = monthEntries.reduce((sum, e) => sum + (e.amount || 0), 0);
 
-        content.innerHTML = `
-            <p id="monthyear">${monthYear}</p>
-            <p id="total">Total spent: -$${total.toFixed(2)}</p>
-        `
+        const panel = document.createElement('div');
+        panel.className = 'spend-panel';
 
-        const entryContainer = document.createElement('div');
-        entryContainer.className = 'entryContainer';
-        containerDiv.appendChild(entryContainer);
+        const header = document.createElement('div');
+        header.className = 'spend-header';
+        header.innerHTML = `
+            <div>
+                <h3>${monthLabel(key)}</h3>
+                <p class="subtext">Total spent: $${total.toFixed(2)}</p>
+            </div>
+        `;
+        panel.appendChild(header);
 
-        // Sort entries by date (ascending)
-        const sortedEntries = entries.sort((a, b) => {
-            const [monthA, dayA, yearA] = a.date.split('/').map(Number);
-            const [monthB, dayB, yearB] = b.date.split('/').map(Number);
-            return new Date(yearA, monthA - 1, dayA) - new Date(yearB, monthB - 1, dayB);
+        const grid = document.createElement('div');
+        grid.className = 'spend-grid';
+
+        monthEntries.forEach(entry => {
+            const card = document.createElement('div');
+            card.className = 'spend-card';
+            card.innerHTML = `
+                <p class="spend-desc">${capitalize(entry.description || 'Spending')}</p>
+                <p class="spend-amount">-$${(entry.amount || 0).toFixed(2)}</p>
+                <p class="spend-date">${entry.date}</p>
+            `;
+            grid.appendChild(card);
         });
 
-
-        sortedEntries.forEach(entry =>{
-            const entryDiv = document.createElement('div');
-            
-            entryDiv.innerHTML = `
-                <p id="description">${entry.description.split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')}</p>
-                <p id="entriesSpent">Spent: -$${entry.amount.toFixed(2)}</p>
-                <p id="entriesDate">Date: ${entry.date}</p>
-
-            `
-            entryDiv.className = "entriesDiv";
-            entryContainer.appendChild(entryDiv);
-        });
+        panel.appendChild(grid);
+        list.appendChild(panel);
     });
-
 }
 
-
-document.addEventListener("DOMContentLoaded", Spent);
-
+function capitalize(text) {
+    return text.split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
+}
 
