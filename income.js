@@ -39,7 +39,7 @@ async function submitData() {
     // Get the value from the new text box for "Spent"
     const spentDescription = job === "Spent" ? document.getElementById('spentDescription').value.trim() : null;
 
-    if (job == "CodeNinjas" || job == "Interest Payment" || job == "Gift" || job == "Other" || job == "Tutoring"){
+    if (job == "W2" || job == "Interest Payment" || job == "Gift" || job == "Other" || job == "Tutoring"){
         await addDoc(collection(db, "incomeData"), {
             job: job,
             amount: parseFloat(amount),
@@ -329,7 +329,6 @@ window.showCurrentEntries = showCurrentEntries;
 
 document.addEventListener('DOMContentLoaded', showMonthlyBudget);
 document.addEventListener('DOMContentLoaded', showCurrentEntries);
-
 
 
 
