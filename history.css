@@ -208,6 +208,7 @@
 
 .history-shell{
     max-width: 1100px;
+    width: 100%;
     margin: 0 auto;
     display: flex;
     flex-direction: column;
@@ -420,7 +421,6 @@
 
 
 .main{
-    width: 80%;
     background-color: rgb(243, 243, 243);
     margin: auto;
     border-radius: 10px;
