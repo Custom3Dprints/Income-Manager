@@ -133,7 +133,11 @@ function renderHistory(entries, searchTerm) {
             <div class="month-header">
                 <div>
                     <h3>${monthLabel}</h3>
-                    <p class="subtext">Income: $${incomeTotal.toFixed(2)} · Spent: -$${spentTotal.toFixed(2)} · Net: $${net.toFixed(2)}</p>
+                    <div class="pill-row">
+                        <span class="pill income-pill">Income: $${incomeTotal.toFixed(2)}</span>
+                        <span class="pill spent-pill">Spent: -$${spentTotal.toFixed(2)}</span>
+                        <span class="pill net-pill">Net: $${net.toFixed(2)}</span>
+                    </div>
                 </div>
                 <span class="chevron">▼</span>
             </div>

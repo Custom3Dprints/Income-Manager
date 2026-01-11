@@ -193,6 +193,7 @@ body {
     border-radius: 4px;
     background-color: #f6f6f6;
     transition: border-color 0.3s ease;
+    width: 100%;
 }
 
 .form-section input:focus, 
@@ -276,6 +277,20 @@ h2 {
 
 .entry-amount.pos{
     color: #15803d;
+}
+
+.entry-filters{
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.entry-filters input,
+.entry-filters select{
+    padding: 10px;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
 }
 
 .entries-actions{
@@ -479,8 +494,29 @@ h2 {
         transform: translateY(-8px) rotate(-45deg);
     }
 
-    .column{
-        height: max-content;
+}
+
+@media screen and (max-width: 640px){
+    .container{
+        flex-direction: column;
     }
 
+    .column{
+        height: auto;
+        padding: 16px;
+    }
+
+    .output-section{
+        height: auto;
+        padding: 16px;
+    }
+
+    .entries-actions{
+        position: static;
+        background: transparent;
+    }
+
+    h2{
+        text-align: left;
+    }
 }
