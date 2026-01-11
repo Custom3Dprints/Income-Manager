@@ -223,6 +223,7 @@
     justify-content: space-between;
     align-items: center;
     gap: 12px;
+    flex-wrap: wrap;
 }
 
 .history-controls h1{
@@ -238,7 +239,23 @@
     padding: 10px 12px;
     border: 1px solid #d1d5db;
     border-radius: 8px;
-    min-width: 260px;
+    min-width: 220px;
+    width: 100%;
+}
+
+@media screen and (max-width: 600px){
+    .history-controls{
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .history-filters{
+        width: 100%;
+    }
+
+    .history-filters input{
+        min-width: 0;
+    }
 }
 
 .history-list{
