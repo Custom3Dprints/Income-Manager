@@ -151,6 +151,24 @@ body {
     border-radius: 4px;
 }
 
+.section-title{
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 12px;
+    margin-bottom: 10px;
+}
+
+.subtext{
+    color: #6b7280;
+    font-size: 0.95rem;
+}
+
+.button-row{
+    display: flex;
+    gap: 10px;
+}
+
 #budgetOutput p{
     padding-bottom: 20px;
 }
@@ -252,6 +270,14 @@ h2 {
     font-weight: 700;
 }
 
+.entry-amount.neg{
+    color: #b91c1c;
+}
+
+.entry-amount.pos{
+    color: #15803d;
+}
+
 .entries-actions{
     display: flex;
     justify-content: flex-end;
@@ -274,6 +300,7 @@ h2 {
 .ghost-btn:hover{
     background: #e7e7e7;
 }
+
 
 
 .test{

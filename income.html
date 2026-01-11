@@ -42,29 +42,39 @@
     <div class="max-content">
         <div class="container">
             <div class="column form-section">
-                <h2>Input</h2>
-                <label for="job">Category:</label>
+                <div class="section-title">
+                    <div>
+                        <h2>Log income or spending</h2>
+                        <p class="subtext">Choose a category, add an amount, and date it.</p>
+                    </div>
+                </div>
+                <label for="job">Category</label>
                 <select id="job" name="job" onchange="showTextbox()">
-                    <option value="W2">W2</option>
-                    <option value="Gift">Gift</option>
-                    <option value="Other">Other</option>
-                    <option value="Spent">Spent</option>
+                    <optgroup label="Income">
+                        <option value="W2">W2</option>
+                        <option value="Gift">Gift</option>
+                        <option value="Tutoring">Tutoring</option>
+                        <option value="Other">Other</option>
+                    </optgroup>
+                    <optgroup label="Spending">
+                        <option value="Spent">Spent</option>
+                    </optgroup>
                 </select>
 
-                <!-- Hidden textbox initially -->
                 <div id="textBoxDiv" style="display:none;">
-                    <label for="spentDescription">Describe your spending:</label><br>
-                    <input type="text" id="spentDescription" name="spentDescription">
+                    <label for="spentDescription">Describe your spending</label><br>
+                    <input type="text" id="spentDescription" name="spentDescription" placeholder="What did you buy?">
                 </div>
-              
     
-                <label for="amount">Amount:</label>
-                <input type="number" id="amount">
+                <label for="amount">Amount</label>
+                <input type="number" id="amount" step="0.01" min="0" placeholder="e.g. 125.50">
     
-                <label for="date">Date:</label>
+                <label for="date">Date</label>
                 <input type="date" id="date">
     
-                <button id="submitBtn">Submit</button>
+                <div class="button-row">
+                    <button id="submitBtn">Save entry</button>
+                </div>
             </div>
             
             <div class="column output-section" id="budgetOutput">
@@ -72,7 +82,11 @@
             </div>
 
             <div class="column output-section">
-                <h2>Entries</h2>
+                <div class="section-title">
+                    <div>
+                        <h2>Entries</h2>
+                    </div>
+                </div>
                 <div id="entriesOutput" class="entries-list"></div>
                 <div class="entries-actions">
                     <button id="deleteSelectedBtn" class="ghost-btn">Delete Selected</button>

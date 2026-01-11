@@ -149,12 +149,14 @@ async function showCurrentEntries() {
     const incomeData = incomeSnap.docs.map(doc => ({
         id: doc.id,
         ref: doc.ref,
+        type: 'Income',
         ...doc.data()
     }));
 
     const spentData = spentSnap.docs.map(doc => ({
         id: doc.id,
         ref: doc.ref,
+        type: 'Spent',
         ...doc.data()
     }));
 
@@ -166,7 +168,16 @@ async function showCurrentEntries() {
 
     monthEntries = filteredData;
 
-    const sorted = [...filteredData].sort((a, b) => {
+    renderEntries(monthEntries);
+}
+
+function renderEntries(entries) {
+    const entriesOutput = document.getElementById('entriesOutput');
+    if (!entriesOutput) return;
+
+    entriesOutput.innerHTML = '';
+
+    const sorted = [...entries].sort((a, b) => {
         const aParts = a.date.split('/');
         const bParts = b.date.split('/');
         const aDate = new Date(aParts[2], aParts[0] - 1, aParts[1]);
@@ -175,7 +186,7 @@ async function showCurrentEntries() {
     });
 
     if (!sorted.length) {
-        entriesOutput.innerHTML = '<p class="helper-text">No entries this month.</p>';
+        entriesOutput.innerHTML = '<p class="helper-text">No entries yet.</p>';
         return;
     }
 
@@ -194,7 +205,7 @@ async function showCurrentEntries() {
 
         const header = document.createElement('div');
         header.className = 'entry-header';
-        header.innerHTML = `<strong>${entry.job}</strong> <span class="entry-amount">$${entry.amount.toFixed(2)}</span>`;
+        header.innerHTML = `<strong>${entry.job}</strong> <span class="entry-amount ${entry.type === 'Spent' ? 'neg' : 'pos'}">${entry.type === 'Spent' ? '-' : ''}$${entry.amount.toFixed(2)}</span>`;
 
         const dateEl = document.createElement('p');
         dateEl.textContent = `Date: ${entry.date}`;
