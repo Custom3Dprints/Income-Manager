@@ -196,6 +196,7 @@ body {
     width: 100%;
 }
 
+
 .form-section input:focus, 
 .form-section select:focus {
     border-color: #4285f4;
@@ -519,4 +520,5 @@ h2 {
     h2{
         text-align: left;
     }
+
 }
