@@ -1,0 +1,8 @@
+Income allocation percentages (as defined in income.js monthly budget logic):
+
+- Mom: $100 flat (or reduced when total < $170)
+- Spending: 20% of total income (minimum $70 unless total < $170, then special rules)
+- HYSA: 35% of remaining after Spending + Mom
+- IRA: 25% of remaining after Spending + Mom
+- Fidelity: 15% of remaining after Spending + Mom
+- Checkings: Whatever remains after the above allocations

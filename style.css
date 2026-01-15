@@ -240,6 +240,26 @@ h2 {
     gap: 12px;
 }
 
+.budget-table{
+    display: grid;
+    grid-template-columns: 2fr 0.6fr 1fr;
+    gap: 8px;
+    margin-top: 10px;
+}
+
+.budget-row{
+    display: contents;
+}
+
+.budget-row span{
+    padding: 6px 0;
+}
+
+.budget-header span{
+    font-weight: 700;
+    border-bottom: 1px solid #e5e5e5;
+}
+
 .entry-row{
     display: flex;
     align-items: flex-start;
