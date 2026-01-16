@@ -194,6 +194,12 @@ body {
     background-color: #f6f6f6;
     transition: border-color 0.3s ease;
     width: 100%;
+    min-width: 0;
+}
+
+.form-section input[type="date"]{
+    width: 100%;
+    max-width: 100%;
 }
 
 

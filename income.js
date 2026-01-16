@@ -78,7 +78,7 @@ async function submitData() {
     const spentDescription = job === "Spent" ? document.getElementById('spentDescription').value.trim() : null;
     const spentCategory = job === "Spent" ? detectGasCategory(spentDescription) : 'Other';
 
-    if (job == "W2" || job == "Interest Payment" || job == "Gift" || job == "Other" || job == "Tutoring"){
+    if (job == "WTDC" || job == "Interest Payment" || job == "Gift" || job == "Other" || job == "Tutoring"){
         await addDoc(collection(db, "incomeData"), {
             job: job,
             amount: parseFloat(amount),
@@ -155,16 +155,16 @@ async function showMonthlyBudget() {
     const gasOverspend = Math.max(gasSpent - gasBonusNet, 0);
 
     const MOM_PERCENT = 0.11;
-    const CHECKINGS_PERCENT = 0.22;
+    const CHECKINGS_PERCENT = 0.20;
     const HYSA_PERCENT = 0.40;
-    const ROTH_PERCENT = 0.27;
+    const ROTH_PERCENT = 0.29;
     const WEBULL_PERCENT = 0.00;
 
     const checkingsAmount = (baseNet * CHECKINGS_PERCENT) - gasOverspend;
 
     const allocations = [
         { account: 'Net Income', category: '-', percent: null, amount: baseNet },
-        { account: 'Gas Bonus (net)', category: 'Gas', percent: null, amount: gasBonusNet },
+        { account: 'Gas Bonus', category: 'Gas', percent: null, amount: gasBonusNet },
         { account: 'Gas Remaining', category: gasOverspend ? 'Gas (overspend hits Checkings)' : 'Gas', percent: null, amount: gasOverspend ? -gasOverspend : gasRemaining },
         { account: 'MOM', category: 'Mom', percent: MOM_PERCENT },
         { account: 'AMEX Checkings', category: 'Spending', percent: CHECKINGS_PERCENT, adjusted: gasOverspend > 0 },
