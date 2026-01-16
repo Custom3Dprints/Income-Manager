@@ -142,6 +142,7 @@ async function showMonthlyBudget() {
 
     const baseNet = baseIncome.reduce((acc, curr) => acc + (Number(curr.amount) || 0), 0);
     const gasBonusNet = gasBonusEntries.reduce((acc, curr) => acc + (Number(curr.amount) || 0), 0);
+    const gasBonusPercent = baseNet > 0 ? gasBonusNet / baseNet : null;
     const gasSpent = spentData.reduce((acc, curr) => {
         const date = parseEntryDate(curr.date);
         const category = detectGasCategory(curr.description, curr.category);
@@ -157,14 +158,14 @@ async function showMonthlyBudget() {
     const MOM_PERCENT = 0.11;
     const CHECKINGS_PERCENT = 0.20;
     const HYSA_PERCENT = 0.40;
-    const ROTH_PERCENT = 0.29;
+    const ROTH_PERCENT = 0.21;
     const WEBULL_PERCENT = 0.00;
 
     const checkingsAmount = (baseNet * CHECKINGS_PERCENT) - gasOverspend;
 
     const allocations = [
         { account: 'Net Income', category: '-', percent: null, amount: baseNet },
-        { account: 'Gas Bonus', category: 'Gas', percent: null, amount: gasBonusNet },
+        { account: 'Gas Bonus', category: 'Gas', percent: gasBonusPercent, amount: gasBonusNet, fixedAmount: true },
         { account: 'Gas Remaining', category: gasOverspend ? 'Gas (overspend hits Checkings)' : 'Gas', percent: null, amount: gasOverspend ? -gasOverspend : gasRemaining },
         { account: 'MOM', category: 'Mom', percent: MOM_PERCENT },
         { account: 'AMEX Checkings', category: 'Spending', percent: CHECKINGS_PERCENT, adjusted: gasOverspend > 0 },
@@ -174,6 +175,9 @@ async function showMonthlyBudget() {
     ].map(item => {
         if (item.account === 'AMEX Checkings') {
             return { ...item, amount: checkingsAmount };
+        }
+        if (item.fixedAmount) {
+            return { ...item };
         }
         return {
             ...item,
