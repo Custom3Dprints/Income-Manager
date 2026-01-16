@@ -142,7 +142,7 @@ async function showMonthlyBudget() {
 
     const baseNet = baseIncome.reduce((acc, curr) => acc + (Number(curr.amount) || 0), 0);
     const gasBonusNet = gasBonusEntries.reduce((acc, curr) => acc + (Number(curr.amount) || 0), 0);
-    const gasBonusPercent = baseNet > 0 ? gasBonusNet / baseNet : null;
+    const totalNet = baseNet;
     const gasSpent = spentData.reduce((acc, curr) => {
         const date = parseEntryDate(curr.date);
         const category = detectGasCategory(curr.description, curr.category);
@@ -155,35 +155,91 @@ async function showMonthlyBudget() {
     const gasRemaining = Math.max(gasBonusNet - gasSpent, 0);
     const gasOverspend = Math.max(gasSpent - gasBonusNet, 0);
 
-    const MOM_PERCENT = 0.11;
-    const CHECKINGS_PERCENT = 0.20;
-    const HYSA_PERCENT = 0.40;
-    const ROTH_PERCENT = 0.21;
-    const WEBULL_PERCENT = 0.00;
+    const CHECKINGS_TARGET = 0.20;
+    const HYSA_TARGET = 0.40;
+    const MOM_TARGET = 0.11;
 
-    const checkingsAmount = (baseNet * CHECKINGS_PERCENT) - gasOverspend;
+    function computeAllocations(total) {
+        if (total <= 0) {
+            return {
+                gasBonus: 0,
+                mom: 0,
+                checkings: 0,
+                hysa: 0,
+                roth: 0,
+                percents: {
+                    gasBonus: 0,
+                    mom: 0,
+                    checkings: 0,
+                    hysa: 0,
+                    roth: 0
+                }
+            };
+        }
+
+        const gasBonusPercent = Math.min(Math.max(gasBonusNet / total, 0), 1);
+        const remainingPercent = Math.max(1 - gasBonusPercent, 0);
+
+        const baseSum = MOM_TARGET + CHECKINGS_TARGET + HYSA_TARGET; // defaults total 0.71
+        let momPercent = MOM_TARGET;
+        let checkingsPercent = CHECKINGS_TARGET;
+        let hysaPercent = HYSA_TARGET;
+        let rothPercent = 0;
+
+        if (remainingPercent >= baseSum) {
+            rothPercent = remainingPercent - baseSum;
+        } else if (remainingPercent > 0) {
+            const scale = remainingPercent / baseSum;
+            momPercent = MOM_TARGET * scale;
+            checkingsPercent = CHECKINGS_TARGET * scale;
+            hysaPercent = HYSA_TARGET * scale;
+            rothPercent = 0;
+        } else {
+            momPercent = 0;
+            checkingsPercent = 0;
+            hysaPercent = 0;
+            rothPercent = 0;
+        }
+
+        const percentSum = gasBonusPercent + momPercent + checkingsPercent + hysaPercent + rothPercent;
+        const residual = 1 - percentSum;
+        if (residual > 1e-9) {
+            rothPercent += residual;
+        }
+
+        const gasBonusAmount = total * gasBonusPercent;
+        const momAmount = total * momPercent;
+        const checkingsAmount = total * checkingsPercent;
+        const hysaAmount = total * hysaPercent;
+        const rothAmount = total * rothPercent;
+
+        return {
+            gasBonus: gasBonusAmount,
+            mom: momAmount,
+            checkings: checkingsAmount,
+            hysa: hysaAmount,
+            roth: rothAmount,
+            percents: {
+                gasBonus: gasBonusPercent,
+                mom: momPercent,
+                checkings: checkingsPercent,
+                hysa: hysaPercent,
+                roth: rothPercent
+            }
+        };
+    }
+
+    const alloc = computeAllocations(totalNet);
 
     const allocations = [
-        { account: 'Net Income', category: '-', percent: null, amount: baseNet },
-        { account: 'Gas Bonus', category: 'Gas', percent: gasBonusPercent, amount: gasBonusNet, fixedAmount: true },
+        { account: 'Net Income', category: '-', percent: null, amount: totalNet },
+        { account: 'Gas Bonus', category: 'Gas', percent: alloc.percents.gasBonus, amount: alloc.gasBonus },
         { account: 'Gas Remaining', category: gasOverspend ? 'Gas (overspend hits Checkings)' : 'Gas', percent: null, amount: gasOverspend ? -gasOverspend : gasRemaining },
-        { account: 'MOM', category: 'Mom', percent: MOM_PERCENT },
-        { account: 'AMEX Checkings', category: 'Spending', percent: CHECKINGS_PERCENT, adjusted: gasOverspend > 0 },
-        { account: 'AMEX HYSA', category: 'Savings', percent: HYSA_PERCENT },
-        { account: 'RothIRA', category: 'Retirement', percent: ROTH_PERCENT },
-        { account: 'Webull', category: 'Day Trading', percent: WEBULL_PERCENT }
-    ].map(item => {
-        if (item.account === 'AMEX Checkings') {
-            return { ...item, amount: checkingsAmount };
-        }
-        if (item.fixedAmount) {
-            return { ...item };
-        }
-        return {
-            ...item,
-            amount: typeof item.percent === 'number' ? baseNet * item.percent : item.amount
-        };
-    });
+        { account: 'MOM', category: 'Mom', amount: alloc.mom, percent: alloc.percents.mom },
+        { account: 'AMEX Checkings', category: 'Spending', amount: alloc.checkings, percent: alloc.percents.checkings },
+        { account: 'AMEX HYSA', category: 'Savings', amount: alloc.hysa, percent: alloc.percents.hysa },
+        { account: 'RothIRA', category: 'Retirement', amount: alloc.roth, percent: alloc.percents.roth }
+    ];
 
     const table = document.createElement('div');
     table.className = 'budget-table';
