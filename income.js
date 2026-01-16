@@ -21,6 +21,7 @@ const db = getFirestore(app);
 
 const TAX_RATE = 0.0816;
 const GAS_BONUS_GROSS = 100;
+const GAS_BONUS_NET = Number((GAS_BONUS_GROSS * (1 - TAX_RATE)).toFixed(2));
 
 function parseEntryDate(dateStr) {
     if (!dateStr) return null;
@@ -142,6 +143,7 @@ async function showMonthlyBudget() {
 
     const baseNet = baseIncome.reduce((acc, curr) => acc + (Number(curr.amount) || 0), 0);
     const gasBonusNet = gasBonusEntries.reduce((acc, curr) => acc + (Number(curr.amount) || 0), 0);
+    // Net Income is user-entered income (gas already factored into entries); gas bonus is shown separately
     const totalNet = baseNet;
     const gasSpent = spentData.reduce((acc, curr) => {
         const date = parseEntryDate(curr.date);
@@ -177,41 +179,86 @@ async function showMonthlyBudget() {
             };
         }
 
-        const gasBonusPercent = Math.min(Math.max(gasBonusNet / total, 0), 1);
-        const remainingPercent = Math.max(1 - gasBonusPercent, 0);
+        // Use fixed gas bonus amount (or stored), capped to total to avoid >100%
+        const fixedGas = gasBonusNet || GAS_BONUS_NET;
+        const gasBonusAmount = Math.min(fixedGas, total);
+        const gasBonusPercent = total > 0 ? gasBonusAmount / total : 0;
 
-        const baseSum = MOM_TARGET + CHECKINGS_TARGET + HYSA_TARGET; // defaults total 0.71
-        let momPercent = MOM_TARGET;
-        let checkingsPercent = CHECKINGS_TARGET;
-        let hysaPercent = HYSA_TARGET;
-        let rothPercent = 0;
+        // Pool remaining after gas bonus
+        let basePool = Math.max(total - gasBonusAmount, 0);
 
-        if (remainingPercent >= baseSum) {
-            rothPercent = remainingPercent - baseSum;
-        } else if (remainingPercent > 0) {
-            const scale = remainingPercent / baseSum;
-            momPercent = MOM_TARGET * scale;
-            checkingsPercent = CHECKINGS_TARGET * scale;
-            hysaPercent = HYSA_TARGET * scale;
-            rothPercent = 0;
-        } else {
-            momPercent = 0;
-            checkingsPercent = 0;
-            hysaPercent = 0;
-            rothPercent = 0;
+        // MOM minimum $100 if Net Income >= 200
+        let momAmount = basePool * MOM_TARGET;
+        if (total >= 200) {
+            momAmount = Math.max(momAmount, 100);
+        }
+        momAmount = Math.min(momAmount, basePool);
+        const momPercent = total > 0 ? momAmount / total : 0;
+
+        let remaining = Math.max(basePool - momAmount, 0);
+
+        const wCheck = 1.4;
+        const wHysa = 2;
+        const wRoth = 1;
+        const wSum = wCheck + wHysa + wRoth || 1;
+
+        // Initial ratio split
+        let checkingsAmount = remaining * (wCheck / wSum);
+        let hysaAmount = remaining * (wHysa / wSum);
+        let rothAmountBase = remaining * (wRoth / wSum);
+        let rothAmount = rothAmountBase;
+
+        // Cap checkings at 20% of total net, redistribute any excess to Roth
+        const maxCheckings = total * 0.20;
+        if (checkingsAmount > maxCheckings) {
+            const excess = checkingsAmount - maxCheckings;
+            checkingsAmount = maxCheckings;
+            // Redistribute excess: 3/5 to HYSA (savings) and 2/5 to Roth
+            const toHysa = excess * 0.6;
+            const toRoth = excess * 0.4;
+            hysaAmount += toHysa;
+            rothAmount += toRoth;
         }
 
+        // Ensure HYSA stays greater than Roth when possible
+        if (hysaAmount <= rothAmount && (hysaAmount + rothAmount) > 0) {
+            const diff = (rothAmount - hysaAmount) / 2;
+            const shift = Math.min(diff + 0.01, rothAmount); // nudge HYSA above Roth
+            rothAmount -= shift;
+            checkingsAmount += 0; // unchanged
+            // Apply shift to HYSA
+            const newHysa = hysaAmount + shift;
+            // keep non-negative
+            const delta = newHysa - hysaAmount;
+            hysaAmount = newHysa;
+            if (rothAmount < 0) {
+                hysaAmount += rothAmount;
+                rothAmount = 0;
+            }
+        }
+
+        const checkingsPercent = total > 0 ? checkingsAmount / total : 0;
+        const hysaPercent = total > 0 ? hysaAmount / total : 0;
+        const rothPercent = total > 0 ? rothAmount / total : 0;
         const percentSum = gasBonusPercent + momPercent + checkingsPercent + hysaPercent + rothPercent;
         const residual = 1 - percentSum;
         if (residual > 1e-9) {
-            rothPercent += residual;
+            const rothAdjusted = rothAmount + residual * total;
+            return {
+                gasBonus: gasBonusAmount,
+                mom: momAmount,
+                checkings: checkingsAmount,
+                hysa: hysaAmount,
+                roth: rothAdjusted,
+                percents: {
+                    gasBonus: gasBonusPercent,
+                    mom: momPercent,
+                    checkings: checkingsPercent,
+                    hysa: hysaPercent,
+                    roth: rothAdjusted / total
+                }
+            };
         }
-
-        const gasBonusAmount = total * gasBonusPercent;
-        const momAmount = total * momPercent;
-        const checkingsAmount = total * checkingsPercent;
-        const hysaAmount = total * hysaPercent;
-        const rothAmount = total * rothPercent;
 
         return {
             gasBonus: gasBonusAmount,
