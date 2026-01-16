@@ -242,7 +242,7 @@ h2 {
 
 .budget-table{
     display: grid;
-    grid-template-columns: 2fr 0.6fr 1fr;
+    grid-template-columns: 1.4fr 1.2fr 0.6fr 1fr;
     gap: 8px;
     margin-top: 10px;
 }

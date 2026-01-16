@@ -19,9 +19,31 @@ const app = initializeApp(firebaseConfig);
 // Initialize Firestore
 const db = getFirestore(app);
 
+const TAX_RATE = 0.0816;
+const GAS_BONUS_GROSS = 100;
+
+function parseEntryDate(dateStr) {
+    if (!dateStr) return null;
+    const parts = dateStr.split('/').map(Number);
+    if (parts.length !== 3) return null;
+    return new Date(parts[2], parts[0] - 1, parts[1]);
+}
+
+function isSameMonthYear(date, month, year) {
+    return date && date.getMonth() === month && date.getFullYear() === year;
+}
+
 function formatCurrency(value) {
     if (isNaN(value) || !isFinite(value)) return '$0.00';
-    return `$${value.toFixed(2)}`;
+    const sign = value < 0 ? '-' : '';
+    return `${sign}$${Math.abs(value).toFixed(2)}`;
+}
+
+function detectGasCategory(description = '', existingCategory = '') {
+    const desc = description.toLowerCase();
+    if (existingCategory && existingCategory.toLowerCase() === 'gas') return 'Gas';
+    if (desc.includes('gas')) return 'Gas';
+    return 'Other';
 }
 
 document.getElementById('submitBtn').addEventListener('click', submitData);
@@ -40,16 +62,21 @@ async function submitData() {
     const amount = document.getElementById('amount').value;
     const dateInput = document.getElementById('date').value;
 
+    if (!amount || !dateInput) {
+        alert('Please add an amount and date.');
+        return;
+    }
+
     // Parse the input date string into a Date object
     const [year, month, day] = dateInput.split('-').map(Number);
     const dateObj = new Date(year, month - 1, day); // Month is 0-indexed
 
     // Format the date to "month/day/year"
     const formattedDate = `${dateObj.getMonth() + 1}/${dateObj.getDate()}/${dateObj.getFullYear()}`;
-    //console.log(formattedDate);
 
     // Get the value from the new text box for "Spent"
     const spentDescription = job === "Spent" ? document.getElementById('spentDescription').value.trim() : null;
+    const spentCategory = job === "Spent" ? detectGasCategory(spentDescription) : 'Other';
 
     if (job == "W2" || job == "Interest Payment" || job == "Gift" || job == "Other" || job == "Tutoring"){
         await addDoc(collection(db, "incomeData"), {
@@ -66,6 +93,7 @@ async function submitData() {
         await addDoc(collection(db, "spentHistory"),{
             job: job,
             description: spentDescription,
+            category: spentCategory,
             amount: parseFloat(amount),
             date: formattedDate
         });
@@ -83,42 +111,91 @@ async function showMonthlyBudget() {
     const budgetOutput = document.getElementById('budgetOutput');
     budgetOutput.innerHTML = '<h2>Monthly Budget</h2>';
     
-    const currentMonth = new Date().getMonth();
-    const currentYear = new Date().getFullYear();
+    const now = new Date();
+    const currentMonth = now.getMonth();
+    const currentYear = now.getFullYear();
 
-    const snapshot = await getDocs(collection(db, 'incomeData'));
-    const data = snapshot.docs.map(doc => doc.data());
+    let [incomeSnap, spentSnap] = await Promise.all([
+        getDocs(collection(db, 'incomeData')),
+        getDocs(collection(db, 'spentHistory'))
+    ]);
 
-    const filteredData = data.filter(item => {
-        const date = new Date(item.date);
-        return date.getMonth() === currentMonth && date.getFullYear() === currentYear && item.job !== "Spent";
+    let incomeData = incomeSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    const addedGasBonus = await ensureGasBonus(incomeData, currentMonth, currentYear);
+
+    if (addedGasBonus) {
+        incomeSnap = await getDocs(collection(db, 'incomeData'));
+        incomeData = incomeSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        // Refresh entries so the bonus shows up there as well.
+        showCurrentEntries();
+    }
+
+    const spentData = spentSnap.docs.map(doc => doc.data());
+
+    const monthlyIncome = incomeData.filter(item => {
+        const date = parseEntryDate(item.date);
+        return isSameMonthYear(date, currentMonth, currentYear) && item.job !== "Spent";
     });
 
-    // Entries are already net income; no additional tax adjustment
-    const netIncome = filteredData.reduce((acc, curr) => acc + curr.amount, 0);
+    const baseIncome = monthlyIncome.filter(item => item.job !== 'GasBonus');
+    const gasBonusEntries = monthlyIncome.filter(item => item.job === 'GasBonus');
+
+    const baseNet = baseIncome.reduce((acc, curr) => acc + (Number(curr.amount) || 0), 0);
+    const gasBonusNet = gasBonusEntries.reduce((acc, curr) => acc + (Number(curr.amount) || 0), 0);
+    const gasSpent = spentData.reduce((acc, curr) => {
+        const date = parseEntryDate(curr.date);
+        const category = detectGasCategory(curr.description, curr.category);
+        if (isSameMonthYear(date, currentMonth, currentYear) && category === 'Gas') {
+            return acc + (Number(curr.amount) || 0);
+        }
+        return acc;
+    }, 0);
+
+    const gasRemaining = Math.max(gasBonusNet - gasSpent, 0);
+    const gasOverspend = Math.max(gasSpent - gasBonusNet, 0);
+
+    const MOM_PERCENT = 0.11;
+    const CHECKINGS_PERCENT = 0.22;
+    const HYSA_PERCENT = 0.40;
+    const ROTH_PERCENT = 0.27;
+    const WEBULL_PERCENT = 0.00;
+
+    const checkingsAmount = (baseNet * CHECKINGS_PERCENT) - gasOverspend;
 
     const allocations = [
-        { label: 'Total Net Income', percent: '-', amount: netIncome },
-        { label: 'AMEX Checking', percent: '23%', amount: netIncome * 0.23 },
-        { label: 'AMEX HYSA', percent: '40%', amount: netIncome * 0.40 },
-        { label: 'Roth IRA', percent: '27%', amount: netIncome * 0.27 },
-        { label: 'Webull', percent: '10%', amount: netIncome * 0.10 }
-    ];
+        { account: 'Net Income', category: '-', percent: null, amount: baseNet },
+        { account: 'Gas Bonus (net)', category: 'Gas', percent: null, amount: gasBonusNet },
+        { account: 'Gas Remaining', category: gasOverspend ? 'Gas (overspend hits Checkings)' : 'Gas', percent: null, amount: gasOverspend ? -gasOverspend : gasRemaining },
+        { account: 'MOM', category: 'Mom', percent: MOM_PERCENT },
+        { account: 'AMEX Checkings', category: 'Spending', percent: CHECKINGS_PERCENT, adjusted: gasOverspend > 0 },
+        { account: 'AMEX HYSA', category: 'Savings', percent: HYSA_PERCENT },
+        { account: 'RothIRA', category: 'Retirement', percent: ROTH_PERCENT },
+        { account: 'Webull', category: 'Day Trading', percent: WEBULL_PERCENT }
+    ].map(item => {
+        if (item.account === 'AMEX Checkings') {
+            return { ...item, amount: checkingsAmount };
+        }
+        return {
+            ...item,
+            amount: typeof item.percent === 'number' ? baseNet * item.percent : item.amount
+        };
+    });
 
     const table = document.createElement('div');
     table.className = 'budget-table';
 
     const header = document.createElement('div');
     header.className = 'budget-row budget-header';
-    header.innerHTML = `<span>Category</span><span>%</span><span>Amount</span>`;
+    header.innerHTML = `<span>Account</span><span>Category</span><span>%</span><span>Amount</span>`;
     table.appendChild(header);
 
     allocations.forEach(item => {
         const row = document.createElement('div');
         row.className = 'budget-row';
         row.innerHTML = `
-            <span>${item.label}</span>
-            <span>${item.percent}</span>
+            <span>${item.account}</span>
+            <span>${item.category}</span>
+            <span>${item.percent === null ? '-' : `${(item.percent * 100).toFixed(0)}%`}</span>
             <span class="entry-amount">${formatCurrency(item.amount)}</span>
         `;
         table.appendChild(row);
@@ -146,17 +223,21 @@ async function showCurrentEntries() {
         ...doc.data()
     }));
 
-    const spentData = spentSnap.docs.map(doc => ({
-        id: doc.id,
-        ref: doc.ref,
-        type: 'Spent',
-        ...doc.data()
-    }));
+    const spentData = spentSnap.docs.map(doc => {
+        const data = doc.data();
+        return {
+            id: doc.id,
+            ref: doc.ref,
+            type: 'Spent',
+            ...data,
+            category: detectGasCategory(data.description, data.category)
+        };
+    });
 
     const filteredData = [...incomeData, ...spentData].filter(item => {
-        const dateParts = item.date.split('/');
-        const date = new Date(dateParts[2], dateParts[0] - 1, dateParts[1]);
-        return date.getMonth() === currentMonth && date.getFullYear() === currentYear;
+        if (item.job === 'GasBonus') return false; // hide auto-added gas bonus from Entries
+        const date = parseEntryDate(item.date);
+        return isSameMonthYear(date, currentMonth, currentYear);
     });
 
     monthEntries = filteredData;
@@ -198,13 +279,21 @@ function renderEntries(entries) {
 
         const header = document.createElement('div');
         header.className = 'entry-header';
-        header.innerHTML = `<strong>${entry.job}</strong> <span class="entry-amount ${entry.type === 'Spent' ? 'neg' : 'pos'}">${entry.type === 'Spent' ? '-' : ''}$${entry.amount.toFixed(2)}</span>`;
+        const amountValue = Number(entry.amount) || 0;
+        const normalizedAmount = entry.type === 'Spent' ? -amountValue : amountValue;
+        header.innerHTML = `<strong>${entry.job}</strong> <span class="entry-amount ${entry.type === 'Spent' ? 'neg' : 'pos'}">${formatCurrency(normalizedAmount)}</span>`;
 
         const dateEl = document.createElement('p');
         dateEl.textContent = `Date: ${entry.date}`;
 
         content.appendChild(header);
         content.appendChild(dateEl);
+
+        if (entry.category) {
+            const cat = document.createElement('p');
+            cat.textContent = `Category: ${entry.category}`;
+            content.appendChild(cat);
+        }
 
         if (entry.description) {
             const desc = document.createElement('p');
@@ -258,3 +347,31 @@ window.showCurrentEntries = showCurrentEntries;
 
 document.addEventListener('DOMContentLoaded', showMonthlyBudget);
 document.addEventListener('DOMContentLoaded', showCurrentEntries);
+
+async function ensureGasBonus(incomeData, currentMonth, currentYear) {
+    const now = new Date();
+    if (now.getMonth() !== currentMonth || now.getFullYear() !== currentYear) return false;
+    if (now.getDate() < 15) return false;
+
+    const bonusExists = incomeData.some(item => {
+        if (item.job !== 'GasBonus') return false;
+        const date = parseEntryDate(item.date);
+        return isSameMonthYear(date, currentMonth, currentYear);
+    });
+
+    if (bonusExists) return false;
+
+    const netGasBonus = Number((GAS_BONUS_GROSS * (1 - TAX_RATE)).toFixed(2));
+    const formattedDate = `${currentMonth + 1}/${now.getDate()}/${currentYear}`;
+
+    await addDoc(collection(db, "incomeData"), {
+        job: "GasBonus",
+        amount: netGasBonus,
+        grossAmount: GAS_BONUS_GROSS,
+        taxRate: TAX_RATE,
+        date: formattedDate,
+        description: "Auto-added gas bonus (after tax)"
+    });
+
+    return true;
+}
