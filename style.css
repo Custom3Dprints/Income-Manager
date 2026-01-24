@@ -177,6 +177,7 @@ body {
     background-color: #ffffff; /* Light background color for sections */
     min-width: 300px;
     height: 100%;
+    min-height: 50vh;
     
     transition: box-shadow 0.3s ease;
     border-radius: 10px;
@@ -647,15 +648,18 @@ h2 {
 @media screen and (max-width: 640px){
     .container{
         flex-direction: column;
+        height: auto;
     }
 
     .column{
         height: auto;
         padding: 16px;
+        min-height: 0;
     }
 
     .output-section{
         height: auto;
+        max-height: 60vh;
         padding: 16px;
     }
 
@@ -668,4 +672,17 @@ h2 {
         text-align: left;
     }
 
+    body{
+        overflow: auto;
+    }
+
+    .max-content{
+        height: auto;
+        max-height: none;
+        overflow: visible;
+    }
+
+    .form-section{
+        height: auto;
+    }
 }
