@@ -8,6 +8,9 @@
 
 body {
     background: #f6f6f6;
+    font-family: "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+    color: #202124;
+    line-height: 1.5;
 }
 
 .navbar{
@@ -115,29 +118,41 @@ body {
     width: max-content;
 }
 
+.max-content{
+    height: auto;
+    max-height: none;
+    overflow: visible;
+}
 
 
 /* Style the container to use flexbox for layout */
 .container {
     display: flex;
-    height: calc(100% - 50px); /* Adjust height to account for navbar */
+    height: auto;
 
     flex-direction: row;
     justify-content: space-around; /* Add space around sections */
     flex-wrap: wrap;
+    align-items: stretch;
     
     width: 100%;
+    padding-bottom: 12px;
 }
 
 /* Style the sections inside the container */
 .column {
     flex: 1;
+    display: flex;
+    flex-direction: column;
     padding: 20px; /* Adjust padding for better spacing */
     margin: 10px; /* Add margin for separation */
-    background-color: #f9f9f9; /* Light background color for sections */
+    background-color: #ffffff; /* Light background color for sections */
     min-width: 300px;
     
     transition: box-shadow 0.3s ease;
+    border-radius: 10px;
+    border: 1px solid #e5e7eb;
+    overflow: visible;
 }
 
 .column:hover {
@@ -148,6 +163,9 @@ body {
 .form-section {
     display: flex;
     flex-direction: column;
+    flex: 1;
+    min-height: 0;
+    overflow: auto;
     border-radius: 4px;
 }
 
@@ -229,9 +247,12 @@ body {
     box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
     border-radius: 8px;
     overflow-y: auto;
-    height: 88vh;  /*Adjust as needed */
+    min-height: 0;
+    max-height: none;
     padding: 20px 24px;
-    background: #f9f9f9;
+    background: #ffffff;
+    display: flex;
+    flex-direction: column;
 }
 
 h2 {
@@ -251,6 +272,10 @@ h2 {
     grid-template-columns: 1.4fr 1.2fr 0.6fr 1fr;
     gap: 8px;
     margin-top: 10px;
+}
+
+.summary-table{
+    grid-template-columns: 1.4fr 1.2fr 1fr;
 }
 
 .budget-row{

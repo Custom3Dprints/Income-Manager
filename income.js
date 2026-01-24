@@ -49,9 +49,19 @@ function detectGasCategory(description = '', existingCategory = '') {
 
 document.getElementById('submitBtn').addEventListener('click', submitData);
 const deleteSelectedBtn = document.getElementById('deleteSelectedBtn');
+const subscriptionSaveBtn = document.getElementById('subscriptionSaveBtn');
+const subscriptionCancelBtn = document.getElementById('subscriptionCancelBtn');
 
 if (deleteSelectedBtn) {
     deleteSelectedBtn.addEventListener('click', deleteSelectedEntries);
+}
+
+if (subscriptionSaveBtn) {
+    subscriptionSaveBtn.addEventListener('click', saveSubscription);
+}
+
+if (subscriptionCancelBtn) {
+    subscriptionCancelBtn.addEventListener('click', cancelSubscription);
 }
 
 //document.getElementById('showHistoryBtn').addEventListener('click', showFullHistory);
@@ -116,9 +126,10 @@ async function showMonthlyBudget() {
     const currentMonth = now.getMonth();
     const currentYear = now.getFullYear();
 
-    let [incomeSnap, spentSnap] = await Promise.all([
+    let [incomeSnap, spentSnap, subsSnap] = await Promise.all([
         getDocs(collection(db, 'incomeData')),
-        getDocs(collection(db, 'spentHistory'))
+        getDocs(collection(db, 'spentHistory')),
+        getDocs(collection(db, 'Subscriptions'))
     ]);
 
     let incomeData = incomeSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
@@ -132,6 +143,7 @@ async function showMonthlyBudget() {
     }
 
     const spentData = spentSnap.docs.map(doc => doc.data());
+    const subscriptions = subsSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
 
     const monthlyIncome = incomeData.filter(item => {
         const date = parseEntryDate(item.date);
@@ -278,14 +290,24 @@ async function showMonthlyBudget() {
 
     const alloc = computeAllocations(totalNet);
 
+    const monthlySubsTotal = subscriptions
+        .filter(sub => (sub.cadence || '').toLowerCase() === 'monthly')
+        .reduce((sum, sub) => sum + (Number(sub.amount) || 0), 0);
+
+    const yearlySubsTotal = subscriptions
+        .filter(sub => (sub.cadence || '').toLowerCase() === 'yearly')
+        .reduce((sum, sub) => sum + (Number(sub.amount) || 0), 0);
+
     const allocations = [
         { account: 'Net Income', category: '-', percent: null, amount: totalNet },
         { account: 'Gas Bonus', category: 'Gas', percent: alloc.percents.gasBonus, amount: alloc.gasBonus },
         { account: 'Gas Remaining', category: gasOverspend ? 'Gas (overspend hits Checkings)' : 'Gas', percent: null, amount: gasOverspend ? -gasOverspend : gasRemaining },
         { account: 'MOM', category: 'Mom', amount: alloc.mom, percent: alloc.percents.mom },
         { account: 'AMEX Checkings', category: 'Spending', amount: alloc.checkings, percent: alloc.percents.checkings },
+        { account: 'Subscriptions (Monthly)', category: 'Recurring', amount: monthlySubsTotal, percent: null },
         { account: 'AMEX HYSA', category: 'Savings', amount: alloc.hysa, percent: alloc.percents.hysa },
-        { account: 'RothIRA', category: 'Retirement', amount: alloc.roth, percent: alloc.percents.roth }
+        { account: 'RothIRA', category: 'Retirement', amount: alloc.roth, percent: alloc.percents.roth },
+        ...(yearlySubsTotal > 0 ? [{ account: 'Yearly Subscriptions', category: 'Recurring', amount: yearlySubsTotal, percent: null }] : [])
     ];
 
     const table = document.createElement('div');
@@ -309,6 +331,114 @@ async function showMonthlyBudget() {
     });
 
     budgetOutput.appendChild(table);
+
+    // Summary subsection
+    const summaryDiv = document.createElement('div');
+    summaryDiv.style.marginTop = '20px';
+
+    const summaryTitle = document.createElement('h3');
+    summaryTitle.textContent = 'Summary';
+    summaryTitle.style.marginBottom = '8px';
+    summaryDiv.appendChild(summaryTitle);
+
+    const summaryTable = document.createElement('div');
+    summaryTable.className = 'budget-table summary-table';
+
+    const summaryHeader = document.createElement('div');
+    summaryHeader.className = 'budget-row budget-header';
+    summaryHeader.innerHTML = `<span>Account</span><span>Category</span><span>Amount</span>`;
+    summaryTable.appendChild(summaryHeader);
+
+    const netChecking = alloc.checkings - monthlySubsTotal;
+    const netHysa = netChecking + alloc.hysa;
+
+    const summaryRows = [
+        { account: 'Net Income', category: '-', amount: totalNet },
+        { account: 'MOM', category: 'Mom', amount: alloc.mom },
+        { account: 'Net Checking', category: 'Spending budget', amount: netChecking },
+        { account: 'Gross HYSA', category: 'Checking + HYSA', amount: netHysa },
+        { account: 'RothIRA', category: 'Retirement', amount: alloc.roth }
+    ];
+
+    summaryRows.forEach(item => {
+        const row = document.createElement('div');
+        row.className = 'budget-row';
+        row.innerHTML = `
+            <span>${item.account}</span>
+            <span>${item.category}</span>
+            <span class="entry-amount">${formatCurrency(item.amount)}</span>
+        `;
+        summaryTable.appendChild(row);
+    });
+
+    summaryDiv.appendChild(summaryTable);
+    budgetOutput.appendChild(summaryDiv);
+}
+
+async function saveSubscription() {
+    const cadenceEl = document.getElementById('subscriptionCadence');
+    const amountEl = document.getElementById('subscriptionAmount');
+    const descEl = document.getElementById('subscriptionDescription');
+    const dueDateEl = document.getElementById('subscriptionDueDate');
+
+    const cadence = cadenceEl ? cadenceEl.value : '';
+    const amountVal = amountEl ? parseFloat(amountEl.value) : NaN;
+    const description = descEl ? descEl.value.trim() : '';
+    const dueDateRaw = dueDateEl ? dueDateEl.value : '';
+
+    if (!cadence || isNaN(amountVal) || amountVal < 0 || !dueDateRaw) {
+        alert('Please enter cadence, amount, and due date for the subscription.');
+        return;
+    }
+
+    const [year, month, day] = dueDateRaw.split('-').map(Number);
+    const dateObj = new Date(year, month - 1, day);
+    const formattedDue = `${dateObj.getMonth() + 1}/${dateObj.getDate()}/${dateObj.getFullYear()}`;
+
+    await addDoc(collection(db, "Subscriptions"), {
+        cadence,
+        amount: amountVal,
+        description,
+        dueDate: formattedDue,
+        createdAt: new Date().toISOString()
+    });
+
+    alert('Subscription saved.');
+    if (amountEl) amountEl.value = '';
+    if (descEl) descEl.value = '';
+    if (dueDateEl) dueDateEl.value = '';
+}
+
+async function cancelSubscription() {
+    const cadenceEl = document.getElementById('subscriptionCadence');
+    const amountEl = document.getElementById('subscriptionAmount');
+    const descEl = document.getElementById('subscriptionDescription');
+
+    const cadence = cadenceEl ? cadenceEl.value : '';
+    const amountVal = amountEl ? parseFloat(amountEl.value) : NaN;
+    const description = descEl ? descEl.value.trim() : '';
+
+    if (!cadence || isNaN(amountVal) || description === '') {
+        alert('Enter cadence, amount, and description to cancel a subscription.');
+        return;
+    }
+
+    const subsSnap = await getDocs(collection(db, "Subscriptions"));
+    const toDelete = subsSnap.docs.find(doc => {
+        const data = doc.data();
+        const sameCadence = data.cadence === cadence;
+        const sameDesc = (data.description || '').trim().toLowerCase() === description.toLowerCase();
+        const sameAmount = Math.abs((Number(data.amount) || 0) - amountVal) < 0.0001;
+        return sameCadence && sameDesc && sameAmount;
+    });
+
+    if (!toDelete) {
+        alert('No subscription found with those details.');
+        return;
+    }
+
+    await deleteDoc(toDelete.ref);
+    alert('Subscription canceled.');
 }
 
 async function showCurrentEntries() {
