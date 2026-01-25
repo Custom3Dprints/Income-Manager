@@ -645,47 +645,34 @@ h2 {
 
 }
 
-@media screen and (max-width: 640px){
-    .container{
-        flex-direction: column;
-        height: auto;
-    }
+@media (max-width: 640px) {
+  body { overflow: auto; }
 
-    .column{
-        height: auto;
-        padding: 16px;
-        min-height: 0;
-    }
+  .max-content,
+  .container {
+    height: auto;
+    max-height: none;
+    overflow: visible;
+  }
 
-    .output-section{
-        height: auto;
-        max-height: 60vh;
-        padding: 16px;
-    }
+  .column {
+    height: auto;
+    min-height: 0;
+    padding: 16px;
+  }
 
-    .entries-actions{
-        position: static;
-        background: transparent;
-    }
+  .form-section {
+    min-height: 90vh;
+    height: auto;
+  }
 
-    h2{
-        text-align: left;
-    }
-
-    body{
-        overflow: auto;
-    }
-
-    .max-content{
-        height: auto;
-        max-height: none;
-        overflow: visible;
-    }
-
-    .form-section{
-        height: auto;
-    }
+  .output-section {
+    height: auto;
+    max-height: none; /* let Monthly Budget/Entries grow */
+    padding: 16px;
+  }
 }
+
 
 @media (max-width: 480px) {
     .form-section input[type="date"] {
