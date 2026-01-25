@@ -686,3 +686,13 @@ h2 {
         height: auto;
     }
 }
+
+@media (max-width: 480px) {
+  .form-section input[type="date"] {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
+  }
+}
+
