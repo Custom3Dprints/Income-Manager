@@ -695,3 +695,7 @@ h2 {
 
 }
 
+@media (max-width: 480px) {
+  .max-content { width: 100%; }
+  .container { padding-left: 8px; padding-right: 8px; }
+}
