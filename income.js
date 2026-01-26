@@ -89,7 +89,7 @@ async function submitData() {
     const spentDescription = job === "Spent" ? document.getElementById('spentDescription').value.trim() : null;
     const spentCategory = job === "Spent" ? detectGasCategory(spentDescription) : 'Other';
 
-    if (job == "WTDC" || job == "Interest Payment" || job == "Gift" || job == "Other" || job == "Tutoring"){
+    if (job == "WTDC" || job == "Interest Payment" || job == "Gift" || job == "Other" || job == "Trading Payout"){
         await addDoc(collection(db, "incomeData"), {
             job: job,
             amount: parseFloat(amount),
