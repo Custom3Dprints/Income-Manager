@@ -100,6 +100,50 @@ function parseDate(dateStr) {
     return new Date(y, m - 1, d);
 }
 
+function parseSubscriptionDueDate(rawDate) {
+    if (!rawDate) return null;
+
+    if (rawDate instanceof Date && !isNaN(rawDate.getTime())) {
+        return rawDate;
+    }
+
+    const value = String(rawDate).trim();
+    if (!value) return null;
+
+    if (/^\d{4}-\d{2}-\d{2}$/.test(value)) {
+        const [year, month, day] = value.split('-').map(Number);
+        return new Date(year, month - 1, day);
+    }
+
+    if (/^\d{1,2}\/\d{1,2}\/\d{4}$/.test(value)) {
+        const [month, day, year] = value.split('/').map(Number);
+        return new Date(year, month - 1, day);
+    }
+
+    const parsed = new Date(value);
+    return isNaN(parsed.getTime()) ? null : parsed;
+}
+
+function isMonthlySubscriptionActiveForMonth(subscription, monthDate) {
+    if (!subscription || (subscription.cadence || '').toLowerCase() !== 'monthly') {
+        return false;
+    }
+
+    const dueDate = parseSubscriptionDueDate(subscription.dueDate);
+    if (!dueDate) {
+        return true;
+    }
+
+    const monthEnd = new Date(
+        monthDate.getFullYear(),
+        monthDate.getMonth() + 1,
+        0,
+        23, 59, 59, 999
+    );
+
+    return dueDate.getTime() <= monthEnd.getTime();
+}
+
 function detectGasCategory(description = '', existingCategory = '') {
     const desc = String(description).toLowerCase();
     if (existingCategory && String(existingCategory).toLowerCase() === 'gas') return 'Gas';
@@ -122,6 +166,10 @@ function formatCurrency(value) {
     if (isNaN(value) || !isFinite(value)) return '$0.00';
     const sign = value < 0 ? '-' : '';
     return `${sign}$${Math.abs(value).toFixed(2)}`;
+}
+
+function roundToCents(value) {
+    return Math.round((Number(value) || 0) * 100) / 100;
 }
 
 function computeAllocations(total, gasBonusNet) {
@@ -337,6 +385,7 @@ function renderHistory(entries, searchTerm, subscriptions = []) {
 
 function buildMonthlyBudgetBlock(monthEntries, incomeTotal, subscriptions) {
     const totalNet = incomeTotal;
+    const monthDate = monthEntries.length ? monthEntries[0].dateObj : new Date();
     const gasBonusNet = monthEntries
         .filter(e => e.type === 'Income' && e.job === 'GasBonus')
         .reduce((sum, e) => sum + (Number(e.amount) || 0), 0);
@@ -350,7 +399,7 @@ function buildMonthlyBudgetBlock(monthEntries, incomeTotal, subscriptions) {
     const alloc = computeAllocations(totalNet, gasBonusNet);
 
     const monthlySubsTotal = subscriptions
-        .filter(sub => (sub.cadence || '').toLowerCase() === 'monthly')
+        .filter(sub => isMonthlySubscriptionActiveForMonth(sub, monthDate))
         .reduce((sum, sub) => sum + (Number(sub.amount) || 0), 0);
 
     const yearlySubsTotal = subscriptions
@@ -363,7 +412,7 @@ function buildMonthlyBudgetBlock(monthEntries, incomeTotal, subscriptions) {
         { account: 'Gas Remaining', category: gasOverspend ? 'Gas (overspend hits Checkings)' : 'Gas', percent: null, amount: gasDelta },
         { account: 'MOM', category: 'Mom', amount: alloc.mom, percent: alloc.percents.mom },
         { account: 'AMEX Checkings', category: 'Spending', amount: alloc.checkings, percent: alloc.percents.checkings },
-        { account: 'Subscriptions (Monthly)', category: 'Recurring', amount: monthlySubsTotal, percent: null },
+        ...(monthlySubsTotal > 0 ? [{ account: 'Subscriptions (Monthly)', category: 'Recurring', amount: monthlySubsTotal, percent: null }] : []),
         { account: 'AMEX HYSA', category: 'Savings', amount: alloc.hysa, percent: alloc.percents.hysa },
         { account: 'RothIRA', category: 'Retirement', amount: alloc.roth, percent: alloc.percents.roth },
         ...(yearlySubsTotal > 0 ? [{ account: 'Yearly Subscriptions', category: 'Recurring', amount: yearlySubsTotal, percent: null }] : [])
@@ -413,22 +462,39 @@ function buildMonthlyBudgetBlock(monthEntries, incomeTotal, subscriptions) {
     summaryHeader.innerHTML = `<span>Account</span><span>Category</span><span>Amount</span>`;
     summaryTable.appendChild(summaryHeader);
 
-    const netChecking = alloc.checkings - monthlySubsTotal;
-    let netHysa = netChecking + alloc.hysa;
+    let netChecking = alloc.checkings;
     let summaryMomAmount = alloc.mom;
 
-    if (gasDelta > 40) {
-        const splitBonus = gasDelta / 2;
-        summaryMomAmount += splitBonus;
-        netHysa += splitBonus;
+    if (gasDelta > 0) {
+        const gasToMom = roundToCents(gasDelta * (2 / 3));
+        const gasToChecking = roundToCents(gasDelta - gasToMom);
+        summaryMomAmount += gasToMom;
+        netChecking += gasToChecking;
     }
 
+    summaryMomAmount = roundToCents(summaryMomAmount);
+    netChecking = roundToCents(netChecking);
+
+    let netHysa = roundToCents(netChecking + alloc.hysa);
+    const targetTotal = roundToCents(totalNet);
+    const rothAmount = roundToCents(alloc.roth);
+    const summaryTotal = roundToCents(summaryMomAmount + netHysa + rothAmount);
+    const residual = roundToCents(targetTotal - summaryTotal);
+
+    // Keep displayed cents aligned so MOM + Gross HYSA + RothIRA equals Net Income.
+    if (residual !== 0 && Math.abs(residual) <= 0.02) {
+        netChecking = roundToCents(netChecking + residual);
+        netHysa = roundToCents(netChecking + alloc.hysa);
+    }
+
+    const summaryNetIncome = roundToCents(totalNet - (alloc.gasBonus - gasDelta));
+
     const summaryRows = [
-        { account: 'Net Income', category: '-', amount: totalNet },
+        { account: 'Net Income', category: '- gas', amount: summaryNetIncome },
         { account: 'MOM', category: 'Mom', amount: summaryMomAmount },
         { account: 'Net Checking', category: 'Spending budget', amount: netChecking },
         { account: 'Gross HYSA', category: 'Checking + HYSA', amount: netHysa },
-        { account: 'RothIRA', category: 'Retirement', amount: alloc.roth }
+        { account: 'RothIRA', category: 'Retirement', amount: rothAmount }
     ];
 
     summaryRows.forEach(item => {
