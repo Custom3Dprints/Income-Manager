@@ -5,6 +5,12 @@
     box-sizing: border-box;
 }
 
+body{
+    font-family: "Montserrat", "Trebuchet MS", Arial, sans-serif;
+    color: #111827;
+    background: linear-gradient(180deg, #f5f4ef 0%, #f7f7fb 100%);
+}
+
 
 .navbar{
     background: #ffffff;
@@ -202,8 +208,7 @@
 .main {
     width: 100%;
     min-height: 100vh;
-    background-color: #f6f6f6;
-    padding: 20px;
+    padding: 28px 20px 40px;
 }
 
 .history-shell{
@@ -218,30 +223,87 @@
 .history-controls{
     background: #ffffff;
     border: 1px solid #e5e7eb;
-    border-radius: 12px;
-    padding: 16px 18px;
+    border-radius: 16px;
+    padding: 18px 20px;
     display: flex;
     justify-content: space-between;
     align-items: center;
     gap: 12px;
     flex-wrap: wrap;
+    box-shadow: none;
 }
 
 .history-controls h1{
-    font-size: 1.6rem;
+    font-size: 1.75rem;
     margin-bottom: 4px;
+    letter-spacing: 0.02em;
 }
 
-.history-controls .subtext{
-    color: #6b7280;
+
+.history-budget{
+    background: #ffffff;
+    border: 1px solid #e7e5f4;
+    border-radius: 14px;
+    padding: 16px 18px;
+    margin-bottom: 14px;
+    box-shadow: 0 12px 30px rgba(15, 23, 42, 0.08);
+}
+
+.history-budget h4{
+    font-size: 1.15rem;
+    text-align: left;
+    margin-bottom: 10px;
+    color: #202124;
+}
+
+.history-budget h5{
+    font-size: 1rem;
+    color: #202124;
+    margin-top: 14px;
+    margin-bottom: 8px;
+}
+
+.history-budget__summary{
+    margin-top: 8px;
+}
+
+.budget-table{
+    display: grid;
+    grid-template-columns: 1.4fr 1.2fr 0.6fr 1fr;
+    gap: 8px;
+    margin-top: 10px;
+}
+
+.summary-table{
+    grid-template-columns: 1.4fr 1.2fr 1fr;
+}
+
+.budget-row{
+    display: contents;
+}
+
+.budget-row span{
+    padding: 6px 0;
+    font-size: 0.95rem;
+}
+
+.budget-header span{
+    font-weight: 700;
+    border-bottom: 1px solid #e5e5e5;
+}
+
+.entry-amount{
+    font-weight: 600;
 }
 
 .history-filters input{
-    padding: 10px 12px;
-    border: 1px solid #d1d5db;
-    border-radius: 8px;
+    padding: 12px 14px;
+    border: 1px solid #d6d3e5;
+    border-radius: 10px;
     min-width: 220px;
     width: 100%;
+    background: #ffffff;
+    box-shadow: 0 8px 20px rgba(15, 23, 42, 0.08);
 }
 
 @media screen and (max-width: 600px){
@@ -266,10 +328,11 @@
 }
 
 .month-panel{
-    border: 1px solid #e5e7eb;
-    border-radius: 12px;
+    border: 1px solid #e7e5f4;
+    border-radius: 16px;
     background: #ffffff;
-    padding: 0 14px 10px 14px;
+    padding: 0 16px 12px 16px;
+    box-shadow: 0 14px 32px rgba(17, 24, 39, 0.08);
 }
 
 .month-panel summary{
@@ -289,7 +352,8 @@
 }
 
 .month-header h3{
-    font-size: 1.1rem;
+    font-size: 1.15rem;
+    letter-spacing: 0.02em;
 }
 
 .chevron{
@@ -308,6 +372,7 @@
     border-radius: 999px;
     font-size: 0.9rem;
     font-weight: 700;
+    box-shadow: inset 0 0 0 1px rgba(15, 23, 42, 0.06);
 }
 
 .income-pill{
@@ -326,18 +391,45 @@
 }
 
 .month-entries{
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-    gap: 10px;
     padding-bottom: 8px;
 }
 
-.history-entry{
-    border: 1px solid #e5e7eb;
-    border-radius: 10px;
-    padding: 10px;
-    background: #f9fafb;
+.month-layout{
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 360px;
+    gap: 16px;
+    align-items: start;
 }
+
+.month-entries__grid{
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 10px;
+}
+
+.month-budget{
+    position: sticky;
+    top: 96px;
+}
+
+.history-entry{
+    border: 1px solid #e7e5f4;
+    border-radius: 12px;
+    padding: 12px;
+    background: #fbfbfe;
+    box-shadow: 0 10px 24px rgba(15, 23, 42, 0.06);
+}
+
+@media screen and (max-width: 980px){
+    .month-layout{
+        grid-template-columns: 1fr;
+    }
+
+    .month-budget{
+        position: static;
+    }
+}
+
 
 .history-entry__top{
     display: flex;
