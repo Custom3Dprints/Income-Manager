@@ -347,11 +347,15 @@ function renderHistory(entries, searchTerm, subscriptions = []) {
         const entriesGrid = document.createElement('div');
         entriesGrid.className = 'month-entries__grid';
 
-        const budgetCol = document.createElement('div');
-        budgetCol.className = 'month-budget';
-        const budgetBlock = buildMonthlyBudgetBlock(monthEntries, incomeTotal, subscriptions);
-        if (budgetBlock) {
-            budgetCol.appendChild(budgetBlock);
+        const showMonthlyBudget = monthEntries[0].dateObj.getFullYear() >= 2026;
+        let budgetCol = null;
+        if (showMonthlyBudget) {
+            budgetCol = document.createElement('div');
+            budgetCol.className = 'month-budget';
+            const budgetBlock = buildMonthlyBudgetBlock(monthEntries, incomeTotal, subscriptions);
+            if (budgetBlock) {
+                budgetCol.appendChild(budgetBlock);
+            }
         }
 
         monthEntries.forEach(entry => {
@@ -375,7 +379,9 @@ function renderHistory(entries, searchTerm, subscriptions = []) {
         });
 
         layout.appendChild(entriesGrid);
-        layout.appendChild(budgetCol);
+        if (budgetCol) {
+            layout.appendChild(budgetCol);
+        }
         entryList.appendChild(layout);
 
         details.appendChild(entryList);
@@ -447,69 +453,72 @@ function buildMonthlyBudgetBlock(monthEntries, incomeTotal, subscriptions) {
 
     wrapper.appendChild(table);
 
-    const summaryDiv = document.createElement('div');
-    summaryDiv.className = 'history-budget__summary';
+    const summaryStartYear = 2026;
+    if (monthDate.getFullYear() >= summaryStartYear) {
+        const summaryDiv = document.createElement('div');
+        summaryDiv.className = 'history-budget__summary';
 
-    const summaryTitle = document.createElement('h5');
-    summaryTitle.textContent = 'Summary';
-    summaryDiv.appendChild(summaryTitle);
+        const summaryTitle = document.createElement('h5');
+        summaryTitle.textContent = 'Summary';
+        summaryDiv.appendChild(summaryTitle);
 
-    const summaryTable = document.createElement('div');
-    summaryTable.className = 'budget-table summary-table';
+        const summaryTable = document.createElement('div');
+        summaryTable.className = 'budget-table summary-table';
 
-    const summaryHeader = document.createElement('div');
-    summaryHeader.className = 'budget-row budget-header';
-    summaryHeader.innerHTML = `<span>Account</span><span>Category</span><span>Amount</span>`;
-    summaryTable.appendChild(summaryHeader);
+        const summaryHeader = document.createElement('div');
+        summaryHeader.className = 'budget-row budget-header';
+        summaryHeader.innerHTML = `<span>Account</span><span>Category</span><span>Amount</span>`;
+        summaryTable.appendChild(summaryHeader);
 
-    let netChecking = alloc.checkings;
-    let summaryMomAmount = alloc.mom;
+        let netChecking = alloc.checkings;
+        let summaryMomAmount = alloc.mom;
 
-    if (gasDelta > 0) {
-        const gasToMom = roundToCents(gasDelta * (2 / 3));
-        const gasToChecking = roundToCents(gasDelta - gasToMom);
-        summaryMomAmount += gasToMom;
-        netChecking += gasToChecking;
+        if (gasDelta > 0) {
+            const gasToMom = roundToCents(gasDelta * (2 / 3));
+            const gasToChecking = roundToCents(gasDelta - gasToMom);
+            summaryMomAmount += gasToMom;
+            netChecking += gasToChecking;
+        }
+
+        summaryMomAmount = roundToCents(summaryMomAmount);
+        netChecking = roundToCents(netChecking);
+
+        let netHysa = roundToCents(netChecking + alloc.hysa);
+        const targetTotal = roundToCents(totalNet);
+        const rothAmount = roundToCents(alloc.roth);
+        const summaryTotal = roundToCents(summaryMomAmount + netHysa + rothAmount);
+        const residual = roundToCents(targetTotal - summaryTotal);
+
+        // Keep displayed cents aligned so MOM + Gross HYSA + RothIRA equals Net Income.
+        if (residual !== 0 && Math.abs(residual) <= 0.02) {
+            netChecking = roundToCents(netChecking + residual);
+            netHysa = roundToCents(netChecking + alloc.hysa);
+        }
+
+        const summaryNetIncome = roundToCents(totalNet - (alloc.gasBonus - gasDelta));
+
+        const summaryRows = [
+            { account: 'Net Income', category: '- gas', amount: summaryNetIncome },
+            { account: 'MOM', category: 'Mom', amount: summaryMomAmount },
+            { account: 'Net Checking', category: 'Spending budget', amount: netChecking },
+            { account: 'Gross HYSA', category: 'Checking + HYSA', amount: netHysa },
+            { account: 'RothIRA', category: 'Retirement', amount: rothAmount }
+        ];
+
+        summaryRows.forEach(item => {
+            const row = document.createElement('div');
+            row.className = 'budget-row';
+            row.innerHTML = `
+                <span>${item.account}</span>
+                <span>${item.category}</span>
+                <span class="entry-amount">${formatCurrency(item.amount)}</span>
+            `;
+            summaryTable.appendChild(row);
+        });
+
+        summaryDiv.appendChild(summaryTable);
+        wrapper.appendChild(summaryDiv);
     }
-
-    summaryMomAmount = roundToCents(summaryMomAmount);
-    netChecking = roundToCents(netChecking);
-
-    let netHysa = roundToCents(netChecking + alloc.hysa);
-    const targetTotal = roundToCents(totalNet);
-    const rothAmount = roundToCents(alloc.roth);
-    const summaryTotal = roundToCents(summaryMomAmount + netHysa + rothAmount);
-    const residual = roundToCents(targetTotal - summaryTotal);
-
-    // Keep displayed cents aligned so MOM + Gross HYSA + RothIRA equals Net Income.
-    if (residual !== 0 && Math.abs(residual) <= 0.02) {
-        netChecking = roundToCents(netChecking + residual);
-        netHysa = roundToCents(netChecking + alloc.hysa);
-    }
-
-    const summaryNetIncome = roundToCents(totalNet - (alloc.gasBonus - gasDelta));
-
-    const summaryRows = [
-        { account: 'Net Income', category: '- gas', amount: summaryNetIncome },
-        { account: 'MOM', category: 'Mom', amount: summaryMomAmount },
-        { account: 'Net Checking', category: 'Spending budget', amount: netChecking },
-        { account: 'Gross HYSA', category: 'Checking + HYSA', amount: netHysa },
-        { account: 'RothIRA', category: 'Retirement', amount: rothAmount }
-    ];
-
-    summaryRows.forEach(item => {
-        const row = document.createElement('div');
-        row.className = 'budget-row';
-        row.innerHTML = `
-            <span>${item.account}</span>
-            <span>${item.category}</span>
-            <span class="entry-amount">${formatCurrency(item.amount)}</span>
-        `;
-        summaryTable.appendChild(row);
-    });
-
-    summaryDiv.appendChild(summaryTable);
-    wrapper.appendChild(summaryDiv);
 
     return wrapper;
 }
