@@ -299,7 +299,7 @@ async function showMonthlyBudget() {
         .reduce((sum, sub) => sum + (Number(sub.amount) || 0), 0);
 
     const allocations = [
-        { account: 'Net Income', category: '-', percent: null, amount: totalNet },
+        { account: 'Total Income', category: '-', percent: null, amount: totalNet },
         { account: 'Gas Bonus', category: 'Gas', percent: alloc.percents.gasBonus, amount: alloc.gasBonus },
         { account: 'Gas Remaining', category: gasOverspend ? 'Gas (overspend hits Checkings)' : 'Gas', percent: null, amount: gasOverspend ? -gasOverspend : gasRemaining },
         { account: 'MOM', category: 'Mom', amount: alloc.mom, percent: alloc.percents.mom },
@@ -350,13 +350,16 @@ async function showMonthlyBudget() {
     summaryTable.appendChild(summaryHeader);
 
     const netChecking = alloc.checkings - monthlySubsTotal;
-    const netHysa = netChecking + alloc.hysa;
+    const monthlyAmexSavings = alloc.hysa;
+    const grossHysa = netChecking + monthlyAmexSavings;
+    const gasBonusAmount = alloc.gasBonus;
+    const summaryNetIncome = totalNet - gasBonusAmount - monthlySubsTotal;
 
     const summaryRows = [
-        { account: 'Net Income', category: '-', amount: totalNet },
+        { account: 'Net Income', category: '- gas bonus & subscription(s)', amount: summaryNetIncome },
         { account: 'MOM', category: 'Mom', amount: alloc.mom },
         { account: 'Net Checking', category: 'Spending budget', amount: netChecking },
-        { account: 'Gross HYSA', category: 'Checking + HYSA', amount: netHysa },
+        { account: 'Gross HYSA', category: 'Checking + HYSA', amount: grossHysa },
         { account: 'RothIRA', category: 'Retirement', amount: alloc.roth }
     ];
 
