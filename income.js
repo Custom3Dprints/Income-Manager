@@ -351,15 +351,14 @@ async function showMonthlyBudget() {
 
     const netChecking = alloc.checkings - monthlySubsTotal;
     const monthlyAmexSavings = alloc.hysa;
-    const grossHysa = netChecking + monthlyAmexSavings;
-    const gasBonusAmount = alloc.gasBonus;
-    const summaryNetIncome = totalNet - gasBonusAmount - monthlySubsTotal;
+    const grossHysa = alloc.gasBonus + monthlySubsTotal + monthlyAmexSavings + netChecking;
+    const summaryNetIncome = totalNet;
 
     const summaryRows = [
-        { account: 'Net Income', category: '- gas bonus & subscription(s)', amount: summaryNetIncome },
+        { account: 'Net Income', category: '-', amount: summaryNetIncome },
         { account: 'MOM', category: 'Mom', amount: alloc.mom },
         { account: 'Net Checking', category: 'Spending budget', amount: netChecking },
-        { account: 'Gross HYSA', category: 'Checking + HYSA', amount: grossHysa },
+        { account: 'Gross HYSA', category: 'Gas + Subs + HYSA + Net Checking', amount: grossHysa },
         { account: 'RothIRA', category: 'Retirement', amount: alloc.roth }
     ];
 
