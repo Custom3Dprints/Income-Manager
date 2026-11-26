@@ -1,5 +1,6 @@
 import { initializeApp } from 'firebase/app';
 import { getFirestore, collection, getDocs } from 'firebase/firestore';
+import { requireSignIn } from './auth';
 
 const firebaseConfig = {
     apiKey: process.env.apiKey,
@@ -17,7 +18,7 @@ const db = getFirestore(app);
 
 let spentEntries = [];
 
-document.addEventListener('DOMContentLoaded', initSpending);
+document.addEventListener('DOMContentLoaded', () => requireSignIn(app, initSpending));
 
 async function initSpending() {
     const main = document.querySelector('.main');

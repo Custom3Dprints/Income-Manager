@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Profile · Income Tracker</title>
+    <link rel="stylesheet" href="history.css">
+    <link rel="stylesheet" href="profile.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="navbar__container">
+            <a id="navbar__logo">Income Tracker</a>
+            <div class="navbar__toggle" id="mobile-menu">
+                <span class="bar"></span><span class="bar"></span><span class="bar"></span>
+            </div>
+            <ul class="navbar__menu">
+                <li class="navbar__"><a class="navbar__links" onclick="Home()">Home</a></li>
+                <li class="navbar__"><a class="navbar__links" onclick="incomeHistory()">History</a></li>
+                <li class="navbar__"><a class="navbar__links" onclick="spending()">Spending</a></li>
+            </ul>
+        </div>
+    </nav>
+    <main id="profile-app" class="profile-page"></main>
+    <script src="dist/profile.bundle.js"></script>
+    <script src="navbar.js"></script>
+</body>
+</html>

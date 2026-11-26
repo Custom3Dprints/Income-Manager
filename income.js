@@ -1,5 +1,6 @@
 import { initializeApp } from 'firebase/app';
 import { getFirestore, collection, getDocs, addDoc, deleteDoc } from 'firebase/firestore';
+import { requireSignIn } from './auth';
 
 const firebaseConfig = {
     apiKey: process.env.apiKey,
@@ -584,8 +585,11 @@ window.submitData = submitData;
 window.showMonthlyBudget = showMonthlyBudget;
 window.showCurrentEntries = showCurrentEntries;
 
-document.addEventListener('DOMContentLoaded', showMonthlyBudget);
-document.addEventListener('DOMContentLoaded', showCurrentEntries);
+document.addEventListener('DOMContentLoaded', () => {
+    requireSignIn(app, async () => {
+        await Promise.all([showMonthlyBudget(), showCurrentEntries()]);
+    });
+});
 
 async function ensureGasBonus(incomeData, currentMonth, currentYear) {
     const now = new Date();

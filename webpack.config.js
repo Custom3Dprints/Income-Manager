@@ -8,7 +8,8 @@ module.exports = {
   entry: {
     income: './income.js',
     history: './history.js',
-    spending: './spending.js'
+    spending: './spending.js',
+    profile: './profile.js'
   },
   output: {
     filename: '[name].bundle.js',

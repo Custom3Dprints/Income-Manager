@@ -30,7 +30,6 @@ body{
     height: 80px;
     z-index: 1;
     width: 100%;
-    max-width: 1300px;
     margin: 0 auto;
     padding: 0 50px;
 }
@@ -109,6 +108,17 @@ body{
 
 
 
+@media screen and (min-width: 961px){
+    .navbar__menu {
+        position: static;
+        width: auto;
+        margin-left: auto;
+        transform: none;
+        gap: 14px;
+    }
+    .navbar__links { padding: 0 1.25rem; }
+}
+
 @media screen and (max-width: 960px){
     .navbar__container{
         display: flex;
@@ -116,7 +126,6 @@ body{
         height: 80px;
         z-index: 1;
         width: 100%;
-        max-width: 1300px;
         padding: 0;
     }
 

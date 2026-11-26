@@ -1,0 +1,20 @@
+.profile-page {
+    min-height: calc(100vh - 80px);
+    display: grid;
+    place-items: center;
+    padding: 32px 20px;
+}
+
+.profile-card {
+    width: min(460px, 100%);
+    padding: 32px;
+    background: #fff;
+    border: 1px solid #e5e7eb;
+    border-radius: 16px;
+    box-shadow: 0 12px 30px rgba(15, 23, 42, 0.08);
+}
+
+.profile-eyebrow { margin-bottom: 8px; color: #4b5563; font-size: .9rem; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; }
+.profile-card h1 { margin-bottom: 10px; }
+.profile-email { margin-bottom: 24px; color: #374151; overflow-wrap: anywhere; }
+.profile-signout { border: 0; border-radius: 7px; padding: 11px 18px; font: inherit; cursor: pointer; background: #2563eb; color: #fff; }

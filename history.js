@@ -1,5 +1,6 @@
 import { initializeApp } from 'firebase/app';
 import { getFirestore, collection, getDocs } from 'firebase/firestore';
+import { requireSignIn } from './auth';
 
 const firebaseConfig = {
     apiKey: process.env.apiKey,
@@ -21,7 +22,18 @@ const GAS_BONUS_NET = Number((GAS_BONUS_GROSS * (1 - TAX_RATE)).toFixed(2));
 
 let allEntries = [];
 
-document.addEventListener('DOMContentLoaded', initHistory);
+function startHistory() {
+    requireSignIn(app, initHistory);
+}
+
+// The bundle can be loaded after DOMContentLoaded (for example, after a Live
+// Server refresh). Start immediately in that case instead of waiting for an
+// event that has already happened.
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', startHistory, { once: true });
+} else {
+    startHistory();
+}
 
 async function initHistory() {
     const mainDiv = document.querySelector('.main');
